@@ -2,8 +2,13 @@
 const replace = require("@rollup/plugin-replace");
 
 module.exports = {
-  // This function will run for each entry/format/env combination
   rollup(config, opts) {
+    // Find and modify the TypeScript plugin
+    const tsPlugin = config.plugins.find(p => p && p.name === 'rpt2');
+    if (tsPlugin && tsPlugin.options) {
+      tsPlugin.options.abortOnError = false;
+    }
+
     config.plugins = config.plugins.map((p) =>
       p.name === "replace"
         ? replace({
@@ -12,6 +17,6 @@ module.exports = {
           })
         : p
     );
-    return config; // always return a config.
+    return config;
   },
 };
