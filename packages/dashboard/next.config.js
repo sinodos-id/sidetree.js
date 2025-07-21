@@ -4,9 +4,22 @@ const isProd = process.env.NODE_ENV === 'production';
 module.exports = {
   productionBrowserSourceMaps: true,
   reactStrictMode: true,
-  webpack5: false,
   // Use the prefix in production and not development.
   assetPrefix: isProd ? '' : '',
+  transpilePackages: [
+    '@sidetree/cas',
+    '@sidetree/cas-ipfs',
+    '@sidetree/common',
+    '@sidetree/core',
+    '@sidetree/crypto',
+    '@sidetree/db',
+    '@sidetree/did-method',
+    '@sidetree/element',
+    '@sidetree/ethereum',
+    '@sidetree/photon',
+    '@sidetree/wallet',
+    '@sidetree/quarkid',
+  ],
   // https://nextjs.org/docs/messages/import-esm-externals
   experimental: { esmExternals: 'loose', outputFileTracing: true },
   // see https://github.com/vercel/vercel/issues/2569#issuecomment-514865342

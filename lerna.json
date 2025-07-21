@@ -9,6 +9,7 @@
     "packages/db",
     "packages/did-method",
     "packages/did-method-element",
+    "packages/did-method-quarkid",
     "packages/did-method-photon",
     "packages/did-method-ion",
     "packages/ledger",
