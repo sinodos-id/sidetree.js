@@ -1,7 +1,7 @@
 // Configuration is extended from @commitlint/config-conventional
 // @see https://github.com/conventional-changelog/commitlint/tree/master/@commitlint/config-conventional
 
-const packages = ['core', 'element', 'photon', 'ion'];
+const packages = ['core', 'element', 'photon', 'ion', 'quarkid'];
 
 module.exports = {
   rules: {

@@ -34,13 +34,13 @@ const getLedger = async (quarkidNodeConfigs: QuarkidNodeConfigs) => {
       },
       providerOrUrl: quarkidNodeConfigs.ethereumRpcUrl,
     });
-    web3 = new Web3(provider);
+    web3 = new Web3(provider as any);
   } else if (quarkidNodeConfigs.ethereumPrivateKey) {
     const provider = new HDWalletProvider({
       privateKeys: [quarkidNodeConfigs.ethereumPrivateKey],
       providerOrUrl: quarkidNodeConfigs.ethereumRpcUrl,
     });
-    web3 = new Web3(provider);
+    web3 = new Web3(provider as any);
   }
   const ledger = new EthereumLedger(
     web3,
