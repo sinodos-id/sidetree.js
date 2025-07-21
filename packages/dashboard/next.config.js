@@ -30,13 +30,13 @@ module.exports = {
       config.resolve.alias['node-fetch'] = 'node-fetch/lib/index.js';
       const [nextJsExternals] = config.externals;
       config.externals = [
-        (context, request, callback) => {
+        ({ context, request }, callback) => {
           // Ignore electron, it is referenced in cas-ipfs/node_modules/electron-fetch
           const IGNORES = ['electron'];
           if (IGNORES.indexOf(request) >= 0) {
             return callback(null, "require('" + request + "')");
           }
-          nextJsExternals(context, request, callback);
+          nextJsExternals({ context, request }, callback);
         },
       ];
     }
