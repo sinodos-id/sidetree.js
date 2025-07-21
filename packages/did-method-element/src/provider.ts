@@ -34,13 +34,13 @@ const getLedger = async (elementNodeConfigs: ElementNodeConfigs) => {
       },
       providerOrUrl: elementNodeConfigs.ethereumRpcUrl,
     });
-    web3 = new Web3(provider);
+    web3 = new Web3(provider as any);
   } else if (elementNodeConfigs.ethereumPrivateKey) {
     const provider = new HDWalletProvider({
       privateKeys: [elementNodeConfigs.ethereumPrivateKey],
       providerOrUrl: elementNodeConfigs.ethereumRpcUrl,
     });
-    web3 = new Web3(provider);
+    web3 = new Web3(provider as any);
   }
   const ledger = new EthereumLedger(
     web3,

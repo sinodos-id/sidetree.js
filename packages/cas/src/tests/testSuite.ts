@@ -32,7 +32,7 @@ import {
   testObjectHash58,
   ionVectors,
 } from './__fixtures__';
-
+//@ts-ignore
 import * as util from 'util';
 import { gzip, gunzip } from 'zlib';
 
