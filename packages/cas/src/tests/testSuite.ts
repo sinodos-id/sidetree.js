@@ -32,12 +32,9 @@ import {
   testObjectHash58,
   ionVectors,
 } from './__fixtures__';
-// @ts-ignore
-import util from 'util';
-import { gzip, gunzip } from 'zlib';
 
-const GZIP_UNIX_OS_FLAG = 3;
-const GZIP_OS_IDX = 9;
+import * as util from 'util';
+import { gzip, gunzip } from 'zlib';
 
 const gzipAsync = util.promisify(gzip);
 const gunzipAsync = util.promisify(gunzip);
@@ -126,7 +123,7 @@ const testSuite = (cas: ICasService): void => {
     describe('files', () => {
       for (const key in ionVectors) {
         it(`should write and read a ${key} file`, async () => {
-          const { cid, content, jsonStr } = ionVectors[key];
+          const { jsonStr } = ionVectors[key];
           const compressedBuffer = await gzipAsync(jsonStr);
 
           const expectedHash = await cas.write(compressedBuffer);

@@ -154,7 +154,9 @@ export default class MongoDbOperationQueue implements IOperationQueue {
   ): QueuedOperationModel {
     return {
       didUniqueSuffix: mongoQueuedOperation.didUniqueSuffix,
-      operationBuffer: Buffer.from(mongoQueuedOperation.operationBufferBsonBinary.buffer),
+      operationBuffer: Buffer.from(
+        mongoQueuedOperation.operationBufferBsonBinary.buffer
+      ),
     };
   }
 }
