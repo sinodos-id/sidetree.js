@@ -7,7 +7,7 @@ const methods = {
   'example:sidetree.testnet': testMethod,
   'elem:ganache': element,
   'elem:ropsten': element,
-  'quarkid:ganache': quarkid,
+  'quarkid': quarkid,
   photon,
 };
 
