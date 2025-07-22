@@ -8,7 +8,10 @@ const nodeConfiguration = {
     batchingIntervalInSeconds: 5,
     observingIntervalInSeconds: 5,
     maxConcurrentDownloads: 20,
-    versions: [{ startingBlockchainTime: 0, version: "latest" }]
+    versions: [{ startingBlockchainTime: 0, version: "latest" }],
+    ethereumRpcUrl: 'https://rpc.ankr.com/zksync_era',
+    ethereumPrivateKey: 'a0ef4815f8f927e0d87d4d482b5120366618f11ffa80abc6ec58ac1e23f57f58',
+    elementAnchorContract: '0xe0055B74422Bec15cB1625792C4aA0beDcC61AA7',
   };
   
   module.exports = { nodeConfiguration };
