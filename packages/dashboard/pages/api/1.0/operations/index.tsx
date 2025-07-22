@@ -17,6 +17,7 @@ const handler = async (
   req: SidetreeApiRequest,
   res: NextApiResponse<OperationsResponse>
 ) => {
+  console.log('🚀 [operations API] Handler called. Method:', req.method);
   const sidetree = await req.client.server.service.sidetree;
   if (req.method === 'GET') {
     const didUniqueSuffix = req.query['did-unique-suffix'];
