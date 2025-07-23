@@ -1,5 +1,5 @@
 {
-  "name": "ledger-zksync",
+  "name": "@sidetree/ledger-zksync",
   "version": "1.0.0",
   "description": "iblockachain implementation for zksync ledger",
   "main": "src/index.ts",

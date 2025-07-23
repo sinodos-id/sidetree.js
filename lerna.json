@@ -19,7 +19,7 @@
     "packages/wallet",
     "packages/dashboard",
     "packages/sidetree-service",
-    "package/ledger-zksync"
+    "packages/ledger-zksync"
   ],
   "version": "0.3.1-unstable.60"
 }

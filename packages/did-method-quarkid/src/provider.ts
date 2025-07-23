@@ -1,9 +1,8 @@
-import Web3 from 'web3';
-import HDWalletProvider from '@truffle/hdwallet-provider';
-import { EthereumLedger } from '@sidetree/ethereum';
+import { ZksyncLedger } from '@sidetree/ledger-zksync';
 import { IpfsCasWithCache } from '@sidetree/cas-ipfs';
 import { MockCas } from '@sidetree/cas';
 import Quarkid from './Quarkid';
+import { Wallet } from 'zksync-web3';
 
 export type QuarkidNodeConfigs = {
   contentAddressableStoreServiceUri: string;
@@ -26,24 +25,12 @@ export type QuarkidNodeConfigs = {
 };
 
 const getLedger = async (quarkidNodeConfigs: QuarkidNodeConfigs) => {
-  let web3 = new Web3(quarkidNodeConfigs.ethereumRpcUrl);
-  if (quarkidNodeConfigs.ethereumMnemonic) {
-    const provider = new HDWalletProvider({
-      mnemonic: {
-        phrase: quarkidNodeConfigs.ethereumMnemonic,
-      },
-      providerOrUrl: quarkidNodeConfigs.ethereumRpcUrl,
-    });
-    web3 = new Web3(provider as any);
-  } else if (quarkidNodeConfigs.ethereumPrivateKey) {
-    const provider = new HDWalletProvider({
-      privateKeys: [quarkidNodeConfigs.ethereumPrivateKey],
-      providerOrUrl: quarkidNodeConfigs.ethereumRpcUrl,
-    });
-    web3 = new Web3(provider as any);
+  if (!quarkidNodeConfigs.ethereumPrivateKey) {
+    throw new Error('ZKSync requires a private key');
   }
-  const ledger = new EthereumLedger(
-    web3,
+  const wallet = new Wallet(quarkidNodeConfigs.ethereumPrivateKey);
+  const ledger = new ZksyncLedger(
+    wallet,
     quarkidNodeConfigs.elementAnchorContract
   );
   await ledger.initialize();
