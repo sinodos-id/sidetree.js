@@ -2,7 +2,8 @@
   "name": "@sidetree/ledger-zksync",
   "version": "1.0.0",
   "description": "iblockachain implementation for zksync ledger",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "scripts": {
     "test": "tsdx test",
     "start": "tsdx watch",

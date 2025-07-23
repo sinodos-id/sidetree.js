@@ -2,7 +2,7 @@ import { ZksyncLedger } from '@sidetree/ledger-zksync';
 import { IpfsCasWithCache } from '@sidetree/cas-ipfs';
 import { MockCas } from '@sidetree/cas';
 import Quarkid from './Quarkid';
-import { Wallet } from 'zksync-web3';
+import { Provider, Wallet } from 'zksync-web3';
 
 export type QuarkidNodeConfigs = {
   contentAddressableStoreServiceUri: string;
@@ -28,7 +28,8 @@ const getLedger = async (quarkidNodeConfigs: QuarkidNodeConfigs) => {
   if (!quarkidNodeConfigs.ethereumPrivateKey) {
     throw new Error('ZKSync requires a private key');
   }
-  const wallet = new Wallet(quarkidNodeConfigs.ethereumPrivateKey);
+  const provider = new Provider(quarkidNodeConfigs.ethereumRpcUrl);
+  const wallet = new Wallet(quarkidNodeConfigs.ethereumPrivateKey, provider);
   const ledger = new ZksyncLedger(
     wallet,
     quarkidNodeConfigs.elementAnchorContract
