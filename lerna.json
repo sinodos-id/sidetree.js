@@ -18,7 +18,8 @@
     "packages/test-vectors",
     "packages/wallet",
     "packages/dashboard",
-    "packages/sidetree-service"
+    "packages/sidetree-service",
+    "package/ledger-zksync"
   ],
   "version": "0.3.1-unstable.60"
 }
