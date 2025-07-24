@@ -29,6 +29,7 @@ const getLedger = async (quarkidNodeConfigs: QuarkidNodeConfigs) => {
     throw new Error('ZKSync requires a private key');
   }
   const provider = new Provider(quarkidNodeConfigs.ethereumRpcUrl);
+  console.log(await provider.getNetwork());
   const wallet = new Wallet(quarkidNodeConfigs.ethereumPrivateKey, provider);
   const ledger = new ZksyncLedger(
     wallet,

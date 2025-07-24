@@ -12,10 +12,10 @@
  * limitations under the License.
  */
 
-import Web3 from 'web3';
+import { Provider } from "zksync-web3";
 
-export const getWeb3 = (provider = 'http://localhost:8545'): Web3 => {
-  return new Web3(provider);
+export const getWeb3 = (provider = 'https://rpc.ankr.com/zksync_era'): Provider => {
+  return new Provider(provider);
 };
 
 export const web3 = getWeb3();

@@ -14,4 +14,8 @@ module.exports = {
     );
     return config; // always return a config.
   },
+  jest(config) {
+    config.testTimeout = 30000;
+    return config;
+  },
 };
