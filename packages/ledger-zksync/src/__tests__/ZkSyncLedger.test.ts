@@ -14,13 +14,15 @@
 
 import { ZksyncLedger } from '..';
 import { web3 } from './web3';
-import { anchorString, anchorString2, anchorString3 } from './__fixtures__/';
+import { anchorString, anchorString2, anchorString3 } from './__fixtures__';
 import { Wallet } from 'zksync-web3';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 jest.setTimeout(10 * 1000);
 
 describe('EthereumLedger', () => {
-  const wallet = new Wallet('0xa0ef4815f8f927e0d87d4d482b5120366618f11ffa80abc6ec58ac1e23f57f58', web3);
+  const wallet = new Wallet(process.env.PRIVATE_KEY!, web3);
   const ledger = new ZksyncLedger(wallet);
   let blockTimeHash1: string;
 
