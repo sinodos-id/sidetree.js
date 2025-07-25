@@ -161,7 +161,7 @@ export default class Observer {
         }
       }
     } catch (error) {
-      Logger.error('Failed to initialize sync state:');
+      Logger.error(`Failed to initialize sync state: ${error}`);
       throw error;
     }
   }
@@ -207,7 +207,7 @@ export default class Observer {
         }
 
       } catch (error) {
-        Logger.error(`Failed to process historical batch ${batchStartBlock}-${batchEndBlock}:`);
+        Logger.error(`Failed to process historical batch ${batchStartBlock}-${batchEndBlock}: ${error}`);
         
         // Implement retry logic
         let retryCount = 0;
@@ -221,7 +221,7 @@ export default class Observer {
           } catch (retryError) {
             retryCount++;
             if (retryCount >= this.historicalSyncConfig.maxRetries) {
-              Logger.error(`Failed to process batch ${batchStartBlock}-${batchEndBlock} after ${this.historicalSyncConfig.maxRetries} retries`);
+              Logger.error(`Failed to process batch ${batchStartBlock}-${batchEndBlock} after ${this.historicalSyncConfig.maxRetries} retries: ${retryError}`);
               throw retryError;
             }
           }
@@ -268,14 +268,14 @@ export default class Observer {
         }
 
       } catch (error) {
-        Logger.error(`Failed to process historical transaction ${transaction.transactionNumber}:`);
+        Logger.error(`Failed to process historical transaction ${transaction.transactionNumber}: ${error}`);
         
         // For historical sync, we continue processing other transactions
         // but may want to record failed transactions for later retry
         try {
           await this.unresolvableTransactionStore.recordUnresolvableTransactionFetchAttempt(transaction);
         } catch (recordError) {
-          Logger.error(`Failed to record unresolvable transaction ${transaction.transactionNumber}:`);
+          Logger.error(`Failed to record unresolvable transaction ${transaction.transactionNumber}: ${recordError}`);
         }
       }
     }
@@ -466,9 +466,8 @@ export default class Observer {
     } catch (error) {
       EventEmitter.emit(EventCode.SidetreeObserverLoopFailure);
       Logger.error(
-        `Encountered unhandled and possibly fatal Observer error, must investigate and fix:`
+        `Encountered unhandled and possibly fatal Observer error, must investigate and fix: ${error}`
       );
-      Logger.error(error);
     } finally {
       if (this.continuePeriodicProcessing) {
         Logger.info(
@@ -608,9 +607,8 @@ export default class Observer {
       );
     } catch (error) {
       Logger.error(
-        `Unhandled error encountered processing transaction '${transaction.transactionNumber}'.`
+        `Unhandled error encountered processing transaction '${transaction.transactionNumber}': ${error}`
       );
-      Logger.error(error);
       transactionProcessedSuccessfully = false;
     }
 
@@ -634,9 +632,8 @@ export default class Observer {
           TransactionProcessingStatus.Error;
 
         Logger.error(
-          `Error encountered saving unresolvable transaction '${transaction.transactionNumber}' for retry.`
+          `Error encountered saving unresolvable transaction '${transaction.transactionNumber}' for retry: ${error}`
         );
-        Logger.error(error);
         return;
       }
     }

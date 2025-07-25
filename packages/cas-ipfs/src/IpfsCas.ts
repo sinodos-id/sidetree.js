@@ -68,7 +68,7 @@ export default class CasIpfs implements ICasService {
 
   public async read(address: string): Promise<FetchResult> {
     try {
-      const source = this.ipfs.get(address);
+      const source = this.ipfs.get(address, { timeout: 10000 });
       const file = await source.next();
       const bufferList: any = await concat(file.value.content);
       const content = bufferList.copy();
