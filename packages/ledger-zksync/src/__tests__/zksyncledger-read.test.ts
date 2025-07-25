@@ -280,6 +280,27 @@ describe('Historical Sync - Sanity Checks', () => {
       
       console.log(`✓ No transactions found after #${highTransactionNumber} (expected)`);
     });
+
+    it('should always include timestamps in transactions returned by read()', async () => {
+      const result = await ledger.read();
+
+      if (result.transactions.length > 0) {
+        for (const tx of result.transactions) {
+          expect(tx).toHaveProperty('transactionTime');
+          expect(typeof tx.transactionTime).toBe('number');
+          expect(tx.transactionTime).toBeGreaterThan(0);
+
+          expect(tx).toHaveProperty('transactionTimeHash');
+          expect(typeof tx.transactionTimeHash).toBe('string');
+          expect(tx.transactionTimeHash).toMatch(/^0x[a-fA-F0-9]{64}$/);
+        }
+        console.log(
+          `✓ Verified that all ${result.transactions.length} transactions from read() have timestamps.`
+        );
+      } else {
+        console.log('✓ No transactions returned from read() to verify.');
+      }
+    });
   });
 });
 

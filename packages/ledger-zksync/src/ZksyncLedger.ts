@@ -174,7 +174,7 @@ export default class ZksyncLedger implements IBlockchain {
     transactionTimeHash?: string
   ): Promise<{ moreTransactions: boolean; transactions: TransactionModel[] }> {
     const options = {
-      omitTimestamp: true,
+      omitTimestamp: false,
     };
     let transactions: TransactionModel[];
 
