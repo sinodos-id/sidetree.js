@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 import EventEmitter from './EventEmitter';
 import EventCode from './EventCode';
-import { Logger, ICas, FetchResult } from '@sidetree/common';
+import { Logger, ICas, FetchResult, FetchResultCode } from '@sidetree/common';
 
 /**
  * Interface containing information regarding each queued CAS download.
@@ -186,6 +186,9 @@ export default class DownloadManager {
       Logger.error(
         `Unexpected error while downloading '${contentHash}, investigate and fix ${error}'.`
       );
+      downloadInfo.fetchResult = {
+        code: FetchResultCode.UnexpectedError,
+      };
     } finally {
       downloadInfo.completed = true;
     }

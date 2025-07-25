@@ -228,6 +228,8 @@ export default {
     'transaction_fee_paid_less_than_normalized_fee',
   TransactionProcessorPaidOperationCountExceedsLimit:
     'transaction_processor_paid_operation_count_exceeds_limit',
+  TransactionProcessorUnexpectedCasError:
+    'transaction_processor_unexpected_cas_error',
   TransactionsNotInSameBlock: 'transactions_not_in_same_block',
   UpdateOperationMissingDidUniqueSuffix:
     'update_operation_missing_did_unique_suffix',

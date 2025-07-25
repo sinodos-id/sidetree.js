@@ -32,7 +32,8 @@ describe('Observer.processTransaction', () => {
   let operationStore: IOperationStore;
   let unresolvableTransactionStore: IUnresolvableTransactionStore;
 
-  const deploymentBlock = 2424399;
+  const fromBlock = 18377000;
+  const toBlock = 18378000;
 
   beforeAll(async () => {
     const config: Config = {
@@ -114,11 +115,9 @@ describe('Observer.processTransaction', () => {
   });
 
   it('should fetch a transaction from the ledger and process it', async () => {
-    const transactions = await ledger._getTransactions(
-      deploymentBlock,
-      deploymentBlock + 2000,
-      { omitTimestamp: false }
-    );
+    const transactions = await ledger._getTransactions(fromBlock, toBlock, {
+      omitTimestamp: false,
+    });
     expect(transactions.length).toBeGreaterThan(0);
     const transaction = transactions[0];
 

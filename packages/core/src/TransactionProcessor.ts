@@ -73,7 +73,8 @@ export default class TransactionProcessor implements ITransactionProcessor {
         // If error is related to CAS network connectivity issues, we need to retry later.
         if (
           error.code === ErrorCode.CasNotReachable ||
-          error.code === ErrorCode.CasFileNotFound
+          error.code === ErrorCode.CasFileNotFound ||
+          error.code === ErrorCode.TransactionProcessorUnexpectedCasError
         ) {
           retryNeeded = true;
         } else {
@@ -83,7 +84,7 @@ export default class TransactionProcessor implements ITransactionProcessor {
               `Invalid core file found for anchor string '${LogColor.green(
                 transaction.anchorString
               )}', the entire batch is discarded. Error: ${LogColor.yellow(
-                error.message
+                (error as any).message
               )}`
             )
           );
@@ -92,7 +93,7 @@ export default class TransactionProcessor implements ITransactionProcessor {
       } else {
         Logger.error(
           LogColor.red(
-            `Unexpected error while fetching and downloading core files, MUST investigate and fix: ${error.message}`
+            `Unexpected error while fetching and downloading core files, MUST investigate and fix: ${error}`
           )
         );
         retryNeeded = true;
@@ -143,7 +144,8 @@ export default class TransactionProcessor implements ITransactionProcessor {
         // If error is related to CAS network connectivity issues, we need to retry later.
         if (
           error.code === ErrorCode.CasNotReachable ||
-          error.code === ErrorCode.CasFileNotFound
+          error.code === ErrorCode.CasFileNotFound ||
+          error.code === ErrorCode.TransactionProcessorUnexpectedCasError
         ) {
           retryNeeded = true;
         } else {
@@ -153,7 +155,7 @@ export default class TransactionProcessor implements ITransactionProcessor {
               `Invalid provisional/chunk file found for anchor string '${LogColor.green(
                 transaction.anchorString
               )}', the entire batch is discarded. Error: ${LogColor.yellow(
-                error.message
+                (error as any).message
               )}`
             )
           );
@@ -162,7 +164,7 @@ export default class TransactionProcessor implements ITransactionProcessor {
       } else {
         Logger.error(
           LogColor.red(
-            `Unexpected error while fetching and downloading provisional files, MUST investigate and fix: ${error.message}`
+            `Unexpected error while fetching and downloading provisional files, MUST investigate and fix: ${error}`
           )
         );
         retryNeeded = true;
@@ -709,6 +711,13 @@ export default class TransactionProcessor implements ITransactionProcessor {
       throw new SidetreeError(
         ErrorCode.CasFileNotFound,
         `File '${fileUri}' not found.`
+      );
+    }
+
+    if (fileFetchResult.code === FetchResultCode.UnexpectedError) {
+      throw new SidetreeError(
+        ErrorCode.TransactionProcessorUnexpectedCasError,
+        `Unexpected error while downloading file '${fileUri}'.`
       );
     }
 
