@@ -22,11 +22,7 @@ import {
 } from '@sidetree/common';
 import { AnchoredDataSerializer } from '@sidetree/core';
 import { ethers } from 'ethers';
-import {
-  Provider,
-  Wallet,
-  Contract
-} from 'zksync-web3';
+import { Provider, Wallet, Contract } from 'zksync-web3';
 
 import {
   ElementContract,
@@ -84,7 +80,7 @@ export default class ZksyncLedger implements IBlockchain {
         anchorContractArtifact.bytecode,
         this.wallet
       );
-      console.log(factory)
+      console.log(factory);
       const contract = await factory.deploy();
       await contract.deployed();
       this.contractAddress = contract.address;
@@ -116,7 +112,7 @@ export default class ZksyncLedger implements IBlockchain {
     const txns = logs.map((log: any) => {
       const parsedLog = contract.interface.parseLog(log);
       return utils.eventLogToSidetreeTransaction(
-        parsedLog as unknown as ElementEventData
+        (parsedLog as unknown) as ElementEventData
       );
     });
     if (options && options.omitTimestamp) {
@@ -142,7 +138,7 @@ export default class ZksyncLedger implements IBlockchain {
       omitTimestamp: true,
     };
     let transactions: TransactionModel[];
-    
+
     if (sinceTransactionNumber !== undefined && transactionTimeHash) {
       const block = await utils.getBlock(this.provider, transactionTimeHash);
       if (block && block.number) {
@@ -151,14 +147,18 @@ export default class ZksyncLedger implements IBlockchain {
           block.number,
           options
         );
-        transactions = blockTransactions.filter(tx => tx.transactionNumber === sinceTransactionNumber);
+        transactions = blockTransactions.filter(
+          (tx) => tx.transactionNumber === sinceTransactionNumber
+        );
       } else {
         transactions = [];
       }
     } else if (sinceTransactionNumber !== undefined) {
       // Only transaction number provided
       const allTransactions = await this._getTransactions(0, 'latest', options);
-      transactions = allTransactions.filter(tx => tx.transactionNumber === sinceTransactionNumber);
+      transactions = allTransactions.filter(
+        (tx) => tx.transactionNumber === sinceTransactionNumber
+      );
     } else if (transactionTimeHash) {
       // Only block hash provided
       const block = await utils.getBlock(this.provider, transactionTimeHash);
@@ -175,7 +175,7 @@ export default class ZksyncLedger implements IBlockchain {
       // No parameters - get all transactions
       transactions = await this._getTransactions(0, 'latest', options);
     }
-    
+
     return {
       moreTransactions: false,
       transactions,
@@ -203,10 +203,10 @@ export default class ZksyncLedger implements IBlockchain {
     const buffer = Encoder.base58ToBuffer(coreIndexFileUri);
 
     try {
-      const tx = await contract.anchorHash(
+      const tx = (await contract.anchorHash(
         '0x' + buffer.toString('hex').substring(4),
         numberOfOperations
-      ) as TransactionResponse;
+      )) as TransactionResponse;
       const txReceipt = await tx.wait();
       this.logger.info(
         `Zksync transaction successful: https://goerli.explorer.zksync.io/tx/${tx.hash}`

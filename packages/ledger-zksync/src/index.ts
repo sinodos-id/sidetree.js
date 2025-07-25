@@ -12,5 +12,5 @@
  * limitations under the License.
  */
 
-import ZksyncLedger from "./ZksyncLedger";
+import ZksyncLedger from './ZksyncLedger';
 export { ZksyncLedger };

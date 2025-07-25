@@ -25,10 +25,7 @@ const eventLogToSidetreeTransaction = (
   log: ElementEventData
 ): TransactionModel => {
   const coreIndexFileUri = Encoder.bufferToBase58(
-    Buffer.from(
-      '1220' + log.args.anchorFileHash.replace('0x', ''),
-      'hex'
-    )
+    Buffer.from('1220' + log.args.anchorFileHash.replace('0x', ''), 'hex')
   );
   const anchorObject = {
     coreIndexFileUri,
