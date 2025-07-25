@@ -6,6 +6,7 @@
   "typings": "dist/index.d.ts",
   "scripts": {
     "test": "tsdx test",
+    "pretest": "nmv use 14",
     "start": "tsdx watch",
     "build": "tsdx build",
     "lint": "tsdx lint src",

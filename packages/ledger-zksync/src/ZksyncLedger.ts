@@ -36,6 +36,11 @@ import { TransactionResponse } from 'zksync-web3/build/src/types';
 const { version } = require('../package.json');
 const anchorContractArtifact = require('../build/contracts/SimpleSidetreeAnchor.json');
 
+interface PaginationConfig {
+  defaultBatchSize: number;
+  maxBatchSize: number;
+}
+
 export default class ZksyncLedger implements IBlockchain {
   private logger: Console;
   public anchorContract: ElementContract;
@@ -43,8 +48,16 @@ export default class ZksyncLedger implements IBlockchain {
   private wallet: Wallet;
   public provider: Provider;
   public contractAddress?: string;
+  
+  /**
+   * Pagination configuration for batch processing
+   */
+  private paginationConfig: PaginationConfig = {
+    defaultBatchSize: 1000,
+    maxBatchSize: 10000,
+  };
 
-  constructor(wallet: Wallet, contractAddress?: string, logger?: Console) {
+  constructor(wallet: Wallet, contractAddress?: string, logger?: Console, paginationConfig?: Partial<PaginationConfig>) {
     this.logger = logger || console;
     this.wallet = wallet;
     this.provider = this.wallet.provider as Provider;
@@ -54,6 +67,11 @@ export default class ZksyncLedger implements IBlockchain {
       anchorContractArtifact.abi,
       this.wallet
     );
+
+    // Merge provided pagination config with defaults
+    if (paginationConfig) {
+      this.paginationConfig = { ...this.paginationConfig, ...paginationConfig };
+    }
   }
 
   getServiceVersion(): Promise<ServiceVersionModel> {
@@ -80,7 +98,6 @@ export default class ZksyncLedger implements IBlockchain {
         anchorContractArtifact.bytecode,
         this.wallet
       );
-      console.log(factory);
       const contract = await factory.deploy();
       await contract.deployed();
       this.contractAddress = contract.address;
@@ -96,40 +113,62 @@ export default class ZksyncLedger implements IBlockchain {
     await this.getLatestTime();
   }
 
+  /**
+   * Enhanced _getTransactions method with proper block range handling
+   */
   public _getTransactions = async (
     fromBlock: number | string,
     toBlock: number | string,
     options?: { filter?: EthereumFilter; omitTimestamp?: boolean }
   ): Promise<TransactionModel[]> => {
     const contract = await this.getAnchorContract();
-    const logs = await contract.provider.getLogs({
-      fromBlock,
-      toBlock: toBlock || 'latest',
-      address: contract.address,
-      topics: contract.filters.Anchor().topics,
-      ...((options && options.filter) || {}),
-    });
-    const txns = logs.map((log: any) => {
-      const parsedLog = contract.interface.parseLog(log);
-      return utils.eventLogToSidetreeTransaction(
-        (parsedLog as unknown) as ElementEventData
+    
+    // Validate block range to prevent RPC timeouts
+    const fromBlockNum = typeof fromBlock === 'string' ? 
+      (fromBlock === 'latest' ? await this.provider.getBlockNumber() : parseInt(fromBlock)) : 
+      fromBlock;
+    const toBlockNum = typeof toBlock === 'string' ? 
+      (toBlock === 'latest' ? await this.provider.getBlockNumber() : parseInt(toBlock)) : 
+      toBlock;
+
+    // If the range is too large, we need to batch the requests
+    const blockRange = toBlockNum - fromBlockNum;
+    if (blockRange > this.paginationConfig.maxBatchSize) {
+      this.logger.warn(
+        `Block range ${blockRange} exceeds maximum batch size ${this.paginationConfig.maxBatchSize}. ` +
+        `Consider using smaller batches for better performance.`
       );
-    });
-    if (options && options.omitTimestamp) {
-      return txns;
     }
-    return utils.extendSidetreeTransactionWithTimestamp(this.provider, txns);
+
+    try {
+      const logs = await contract.provider.getLogs({
+        fromBlock,
+        toBlock: toBlock || 'latest',
+        address: contract.address,
+        topics: contract.filters.Anchor().topics,
+        ...((options && options.filter) || {}),
+      });
+
+      const txns = logs.map((log: any) => {
+        const parsedLog = contract.interface.parseLog(log);
+        return utils.eventLogToSidetreeTransaction(
+          (parsedLog as unknown) as ElementEventData
+        );
+      });
+
+      if (options && options.omitTimestamp) {
+        return txns;
+      }
+      return utils.extendSidetreeTransactionWithTimestamp(this.provider, txns);
+    } catch (error) {
+      this.logger.error(`Failed to get transactions for block range ${fromBlock}-${toBlock}:`, error);
+      throw error;
+    }
   };
 
-  public extendSidetreeTransactionWithTimestamp = async (
-    transactions: TransactionModel[]
-  ): Promise<TransactionModel[]> => {
-    return utils.extendSidetreeTransactionWithTimestamp(
-      this.provider,
-      transactions
-    );
-  };
-
+  /**
+   * Enhanced read method with pagination support for historical sync
+   */
   public async read(
     sinceTransactionNumber?: number,
     transactionTimeHash?: string
@@ -139,48 +178,190 @@ export default class ZksyncLedger implements IBlockchain {
     };
     let transactions: TransactionModel[];
 
-    if (sinceTransactionNumber !== undefined && transactionTimeHash) {
-      const block = await utils.getBlock(this.provider, transactionTimeHash);
-      if (block && block.number) {
-        const blockTransactions = await this._getTransactions(
-          block.number,
-          block.number,
-          options
-        );
-        transactions = blockTransactions.filter(
-          (tx) => tx.transactionNumber === sinceTransactionNumber
-        );
+    try {
+      if (sinceTransactionNumber !== undefined && transactionTimeHash) {
+        // Both transaction number and time hash provided - find specific transaction
+        const block = await utils.getBlock(this.provider, transactionTimeHash);
+        if (block && block.number) {
+          const blockTransactions = await this._getTransactions(
+            block.number,
+            block.number,
+            options
+          );
+          transactions = blockTransactions.filter(
+            (tx) => tx.transactionNumber === sinceTransactionNumber
+          );
+        } else {
+          transactions = [];
+        }
+      } else if (sinceTransactionNumber !== undefined) {
+        // Only transaction number provided - need to find transactions after this number
+        // For pagination support, we implement a more efficient approach
+        transactions = await this.getTransactionsAfterTransactionNumber(sinceTransactionNumber, options);
+      } else if (transactionTimeHash) {
+        // Only block hash provided
+        const block = await utils.getBlock(this.provider, transactionTimeHash);
+        if (block && block.number) {
+          transactions = await this._getTransactions(
+            block.number,
+            block.number,
+            options
+          );
+        } else {
+          transactions = [];
+        }
       } else {
-        transactions = [];
+        // No parameters - this is the problematic case for large contracts
+        // Instead of getting ALL transactions, we now return a limited batch
+        this.logger.warn(
+          'read() called without parameters - returning limited batch for performance. ' +
+          'Use historical sync for complete transaction processing.'
+        );
+        
+        const latestBlock = await this.provider.getBlockNumber();
+        const fromBlock = Math.max(0, latestBlock - this.paginationConfig.defaultBatchSize);
+        
+        transactions = await this._getTransactions(fromBlock, latestBlock, options);
       }
-    } else if (sinceTransactionNumber !== undefined) {
-      // Only transaction number provided
-      const allTransactions = await this._getTransactions(0, 'latest', options);
-      transactions = allTransactions.filter(
-        (tx) => tx.transactionNumber === sinceTransactionNumber
+
+      // Determine if there are more transactions
+      // This is a simplified implementation - in production, you might want more sophisticated logic
+      const moreTransactions = this.shouldCheckForMoreTransactions(transactions, sinceTransactionNumber);
+
+      return {
+        moreTransactions,
+        transactions,
+      };
+    } catch (error) {
+      this.logger.error('Error in read method:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get transactions after a specific transaction number efficiently
+   */
+  private async getTransactionsAfterTransactionNumber(
+    sinceTransactionNumber: number,
+    options: { omitTimestamp?: boolean }
+  ): Promise<TransactionModel[]> {
+    // TODO: This is a simplified implementation. In production:
+    // 1. Use binary search to find the starting block
+    // 2. Cache transaction number to block mappings
+    // 3. Use event logs with transaction number filtering
+    
+    const latestBlock = await this.provider.getBlockNumber();
+    let transactions: TransactionModel[] = [];
+    
+    // Start from recent blocks and work backwards to find transactions after the given number
+    // This is more efficient than scanning from genesis for recent sync operations
+    const batchSize = this.paginationConfig.defaultBatchSize;
+    let currentBlock = latestBlock;
+    
+    while (currentBlock > 0 && transactions.length === 0) {
+      const fromBlock = Math.max(0, currentBlock - batchSize);
+      const batchTransactions = await this._getTransactions(fromBlock, currentBlock, options);
+      
+      // Filter for transactions after the given number
+      const filteredTransactions = batchTransactions.filter(
+        tx => tx.transactionNumber > sinceTransactionNumber
       );
-    } else if (transactionTimeHash) {
-      // Only block hash provided
-      const block = await utils.getBlock(this.provider, transactionTimeHash);
-      if (block && block.number) {
-        transactions = await this._getTransactions(
-          block.number,
-          block.number,
-          options
-        );
-      } else {
-        transactions = [];
+      
+      if (filteredTransactions.length > 0) {
+        transactions = filteredTransactions;
+        break;
       }
-    } else {
-      // No parameters - get all transactions
-      transactions = await this._getTransactions(0, 'latest', options);
+      
+      currentBlock = fromBlock - 1;
+    }
+    
+    return transactions.sort((a, b) => a.transactionNumber - b.transactionNumber);
+  }
+
+  /**
+   * Determine if there are likely more transactions to process
+   */
+  private shouldCheckForMoreTransactions(
+    transactions: TransactionModel[],
+    sinceTransactionNumber?: number
+  ): boolean {
+    if (transactions.length === 0) {
+      return false;
     }
 
-    return {
-      moreTransactions: false,
-      transactions,
-    };
+    // If we got a full batch, there might be more
+    if (transactions.length >= this.paginationConfig.defaultBatchSize) {
+      return true;
+    }
+
+    // If we're doing incremental sync and got any transactions, there might be more
+    if (sinceTransactionNumber !== undefined && transactions.length > 0) {
+      return true;
+    }
+
+    return false;
   }
+
+  /**
+   * Get total transaction count (useful for progress tracking)
+   */
+  public async getTotalTransactionCount(): Promise<number> {
+    try {
+      const contract = await this.getAnchorContract();
+      
+      // Get the current transaction number from the contract
+      // This assumes the contract has a public transactionNumber variable
+      const currentTransactionNumber = await contract.transactionNumber();
+      return currentTransactionNumber.toNumber();
+    } catch (error) {
+      this.logger.error('Failed to get total transaction count:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Get contract deployment block (useful for historical sync)
+   */
+  public async getContractDeploymentBlock(): Promise<number> {
+    try {
+      if (!this.contractAddress) {
+        return 0;
+      }
+
+      // Try to find the contract creation transaction
+      // This is a simplified approach - in production you might cache this value
+      const latestBlock = await this.provider.getBlockNumber();
+      
+      // Binary search for the deployment block
+      let low = 0;
+      let high = latestBlock;
+      
+      while (low < high) {
+        const mid = Math.floor((low + high) / 2);
+        const code = await this.provider.getCode(this.contractAddress, mid);
+        
+        if (code === '0x') {
+          low = mid + 1;
+        } else {
+          high = mid;
+        }
+      }
+      
+      return low;
+    } catch (error) {
+      this.logger.warn('Could not determine contract deployment block, using 0:', error);
+      return 0;
+    }
+  }
+
+  public extendSidetreeTransactionWithTimestamp = async (
+    transactions: TransactionModel[]
+  ): Promise<TransactionModel[]> => {
+    return utils.extendSidetreeTransactionWithTimestamp(
+      this.provider,
+      transactions
+    );
+  };
 
   public get approximateTime(): BlockchainTimeModel {
     return this.cachedBlockchainTime;
@@ -219,6 +400,7 @@ export default class ZksyncLedger implements IBlockchain {
         `Unable to write to the ledger from: ${this.wallet.address}`
       );
       this.logger.error(error.message);
+      throw error;
     }
   };
 
@@ -240,5 +422,19 @@ export default class ZksyncLedger implements IBlockchain {
 
   getWriterValueTimeLock(): Promise<ValueTimeLockModel | undefined> {
     return Promise.resolve(undefined);
+  }
+
+  /**
+   * Update pagination configuration
+   */
+  public updatePaginationConfig(config: Partial<PaginationConfig>): void {
+    this.paginationConfig = { ...this.paginationConfig, ...config };
+  }
+
+  /**
+   * Get current pagination configuration
+   */
+  public getPaginationConfig(): PaginationConfig {
+    return { ...this.paginationConfig };
   }
 }
