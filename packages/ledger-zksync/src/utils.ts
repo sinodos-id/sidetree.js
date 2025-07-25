@@ -72,7 +72,8 @@ const extendSidetreeTransactionWithTimestamp = async (
       if (typeof timestamp === 'number') {
         return {
           ...txn,
-          transactionTimestamp: timestamp,
+          transactionTime: timestamp,
+          transactionTimeHash: txn.transactionTimeHash,
         };
       }
       return txn;

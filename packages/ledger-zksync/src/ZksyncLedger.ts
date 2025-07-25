@@ -151,8 +151,13 @@ export default class ZksyncLedger implements IBlockchain {
 
       const txns = logs.map((log: any) => {
         const parsedLog = contract.interface.parseLog(log);
+        // Manually combine the original log properties with the parsed args
+        const combinedLog = {
+          ...log,
+          ...parsedLog,
+        };
         return utils.eventLogToSidetreeTransaction(
-          (parsedLog as unknown) as ElementEventData
+          (combinedLog as unknown) as ElementEventData
         );
       });
 
