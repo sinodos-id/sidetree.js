@@ -105,7 +105,8 @@ export default class Core {
       this.operationStore,
       this.transactionStore,
       this.unresolvableTransactionStore,
-      config.observingIntervalInSeconds
+      config.observingIntervalInSeconds,
+      (config as any).historicalSync
     );
 
     // this.monitor = new Monitor();

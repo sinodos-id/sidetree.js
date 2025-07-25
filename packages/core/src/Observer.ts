@@ -161,7 +161,7 @@ export default class Observer {
         }
       }
     } catch (error) {
-      Logger.error('Failed to initialize sync state:', error);
+      Logger.error('Failed to initialize sync state:');
       throw error;
     }
   }
@@ -207,7 +207,7 @@ export default class Observer {
         }
 
       } catch (error) {
-        Logger.error(`Failed to process historical batch ${batchStartBlock}-${batchEndBlock}:`, error);
+        Logger.error(`Failed to process historical batch ${batchStartBlock}-${batchEndBlock}:`);
         
         // Implement retry logic
         let retryCount = 0;
@@ -237,7 +237,7 @@ export default class Observer {
    * Process a single historical batch
    */
   private async processHistoricalBatch(fromBlock: number, toBlock: number): Promise<void> {
-    // Use the enhanced blockchain interface to get transactions for the block range
+    // Use the enhanced blprocessHistoricalBatchockchain interface to get transactions for the block range
     const transactions = await (this.blockchain as any)._getTransactions(fromBlock, toBlock, {
       omitTimestamp: false
     });
@@ -268,14 +268,14 @@ export default class Observer {
         }
 
       } catch (error) {
-        Logger.error(`Failed to process historical transaction ${transaction.transactionNumber}:`, error);
+        Logger.error(`Failed to process historical transaction ${transaction.transactionNumber}:`);
         
         // For historical sync, we continue processing other transactions
         // but may want to record failed transactions for later retry
         try {
           await this.unresolvableTransactionStore.recordUnresolvableTransactionFetchAttempt(transaction);
         } catch (recordError) {
-          Logger.error(`Failed to record unresolvable transaction ${transaction.transactionNumber}:`, recordError);
+          Logger.error(`Failed to record unresolvable transaction ${transaction.transactionNumber}:`);
         }
       }
     }

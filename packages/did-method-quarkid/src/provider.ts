@@ -4,6 +4,8 @@ import { MockCas } from '@sidetree/cas';
 import Quarkid from './Quarkid';
 import { Provider, Wallet } from 'zksync-web3';
 
+import { HistoricalSyncConfig } from '@sidetree/ledger-zksync/src/historical-sync-config';
+
 export type QuarkidNodeConfigs = {
   contentAddressableStoreServiceUri: string;
   databaseName: string;
@@ -22,6 +24,7 @@ export type QuarkidNodeConfigs = {
   elementAnchorContract?: string;
   ethereumMnemonic?: string;
   ethereumPrivateKey?: string;
+  historicalSync?: HistoricalSyncConfig;
 };
 
 const getLedger = async (quarkidNodeConfigs: QuarkidNodeConfigs) => {
