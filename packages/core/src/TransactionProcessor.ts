@@ -41,6 +41,7 @@ export default class TransactionProcessor implements ITransactionProcessor {
   public async processTransaction(
     transaction: TransactionModel
   ): Promise<boolean> {
+    console.log('SANTITY CHECK >>>>>> ');
     // Download the core (index and proof) files.
     let anchoredData: AnchoredData;
     let coreIndexFile: CoreIndexFile;
@@ -84,7 +85,7 @@ export default class TransactionProcessor implements ITransactionProcessor {
         // If error is related to CAS network connectivity issues, we need to retry later.
         if (
           error.code === ErrorCode.CasNotReachable ||
-          error.code === ErrorCode.TransactionProcessorUnexpectedCasError
+          error.code === ErrorCode.BatchSchedulerWriteUnexpectedError
         ) {
           retryNeeded = true;
         } else {
@@ -155,7 +156,7 @@ export default class TransactionProcessor implements ITransactionProcessor {
         if (
           error.code === ErrorCode.CasNotReachable ||
           error.code === ErrorCode.CasFileNotFound ||
-          error.code === ErrorCode.TransactionProcessorUnexpectedCasError
+          error.code === ErrorCode.CasFileNotAFile
         ) {
           retryNeeded = true;
         } else {
@@ -271,6 +272,7 @@ export default class TransactionProcessor implements ITransactionProcessor {
       coreProofFileUri,
       protocolParameters.maxProofFileSizeInBytes
     );
+    Logger.info('LOGGIN BEFORE CORE PROOF FILE >>>>>>>>>>>>>>>>>>>.');
     const coreProofFile = await CoreProofFile.parse(
       fileBuffer,
       coreIndexFile.deactivateDidSuffixes
@@ -729,13 +731,6 @@ export default class TransactionProcessor implements ITransactionProcessor {
       throw new SidetreeError(
         ErrorCode.CasFileNotFound,
         `File '${fileUri}' not found.`
-      );
-    }
-
-    if (fileFetchResult.code === FetchResultCode.UnexpectedError) {
-      throw new SidetreeError(
-        ErrorCode.TransactionProcessorUnexpectedCasError,
-        `Unexpected error while downloading file '${fileUri}'.`
       );
     }
 

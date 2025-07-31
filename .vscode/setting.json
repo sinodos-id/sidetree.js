@@ -1,0 +1,5 @@
+{
+  "jest.nodeEnv": {
+    "PATH": "/Users/skamy/.nvm/versions/node/v14.21.3/bin:${env:PATH}"
+  }
+}

@@ -187,7 +187,7 @@ export default class DownloadManager {
         `Unexpected error while downloading '${contentHash}, investigate and fix ${error}'.`
       );
       downloadInfo.fetchResult = {
-        code: FetchResultCode.UnexpectedError,
+        code: FetchResultCode.CasNotReachable,
       };
     } finally {
       downloadInfo.completed = true;

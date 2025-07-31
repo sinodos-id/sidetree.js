@@ -77,6 +77,7 @@ export default class CoreProofFile {
     coreProofFileBuffer: Buffer,
     expectedDeactivatedDidUniqueSuffixes: string[]
   ): Promise<CoreProofFile> {
+    console.log('LOGGIN CORE PROOF FILE >>>>>>>>>>>>>>>>>>>.');
     let coreProofFileDecompressedBuffer;
     try {
       const maxAllowedDecompressedSizeInBytes =
@@ -89,7 +90,7 @@ export default class CoreProofFile {
     } catch (error) {
       throw SidetreeError.createFromError(
         ErrorCode.CoreProofFileDecompressionFailure,
-        error
+        error as any
       );
     }
 
@@ -101,7 +102,7 @@ export default class CoreProofFile {
     } catch (error) {
       throw SidetreeError.createFromError(
         ErrorCode.CoreProofFileNotJson,
-        error
+        error as any
       );
     }
 
