@@ -1,5 +1,3 @@
-import Observer from './Observer';
-import ZksyncLedger from './ZksyncLedger';
 
 // =============================================================================
 // Configuration Interfaces
@@ -80,7 +78,7 @@ export const SYNC_PRESETS = {
   // Aggressive settings for fast RPCs and high bandwidth
   AGGRESSIVE: {
     historicalSync: {
-      batchSize: 2000,
+      batchSize: 10000,
       rateLimitDelayMs: 50,
       maxRetries: 2,
       retryDelayMs: 500,
@@ -91,45 +89,3 @@ export const SYNC_PRESETS = {
     },
   },
 };
-
-export class HistoricalSyncMonitor {
-  private observer: Observer;
-  private blockchain: ZksyncLedger;
-  private progressInterval!: NodeJS.Timeout;
-
-  constructor(observer: Observer, blockchain: ZksyncLedger) {
-    this.observer = observer;
-    this.blockchain = blockchain;
-  }
-
-  public startMonitoring(intervalMs: number = 10000): void {
-    this.progressInterval = setInterval(async () => {
-      await this.getSyncStatistics();
-    }, intervalMs);
-  }
-
-  public stopMonitoring(): void {
-    if (this.progressInterval) {
-      clearInterval(this.progressInterval);
-    }
-  }
-
-  public async getSyncStatistics(): Promise<{
-    syncState: SyncState;
-    totalTransactions: number;
-    progressPercentage: number;
-  }> {
-    const syncState = this.observer.getSyncState();
-    const totalTransactions = await this.blockchain.getTotalTransactionCount();
-    const progressPercentage =
-      syncState.targetBlock > 0
-        ? (syncState.lastSyncedBlock / syncState.targetBlock) * 100
-        : 0;
-
-    return {
-      syncState,
-      totalTransactions,
-      progressPercentage,
-    };
-  }
-}

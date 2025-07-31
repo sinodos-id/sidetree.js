@@ -290,19 +290,20 @@ export default class ZksyncLedger implements IBlockchain {
     transactions: TransactionModel[],
     sinceTransactionNumber?: number
   ): boolean {
-    if (transactions.length === 0) {
-      return false;
-    }
+    console.log(transactions, sinceTransactionNumber);
+    // if (transactions.length === 0) {
+    //   return false;
+    // }
 
-    // If we got a full batch, there might be more
-    if (transactions.length >= this.paginationConfig.defaultBatchSize) {
-      return true;
-    }
+    // // If we got a full batch, there might be more
+    // if (transactions.length >= this.paginationConfig.defaultBatchSize) {
+    //   return true;
+    // }
 
-    // If we're doing incremental sync and got any transactions, there might be more
-    if (sinceTransactionNumber !== undefined && transactions.length > 0) {
-      return true;
-    }
+    // // If we're doing incremental sync and got any transactions, there might be more
+    // if (sinceTransactionNumber !== undefined && transactions.length > 0) {
+    //   return true;
+    // }
 
     return false;
   }
@@ -380,6 +381,13 @@ export default class ZksyncLedger implements IBlockchain {
     };
     this.cachedBlockchainTime = blockchainTime;
     return blockchainTime;
+  }
+  public async getBlockNumberByHash(hash: string): Promise<number> {
+    const block = await utils.getBlock(this.provider, hash);
+    if (!block) {
+      throw new Error(`Block with hash ${hash} not found.`);
+    }
+    return block.number;
   }
 
   public write = async (anchorString: string, _fee = 0): Promise<any> => {

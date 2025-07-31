@@ -73,7 +73,6 @@ export default class TransactionProcessor implements ITransactionProcessor {
         // If error is related to CAS network connectivity issues, we need to retry later.
         if (
           error.code === ErrorCode.CasNotReachable ||
-          error.code === ErrorCode.CasFileNotFound ||
           error.code === ErrorCode.TransactionProcessorUnexpectedCasError
         ) {
           retryNeeded = true;

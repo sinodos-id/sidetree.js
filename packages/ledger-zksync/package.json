@@ -24,6 +24,9 @@
     "tsdx": "^0.14.1",
     "zksync-web3": "^0.17.1"
   },
+  "devDependencies": {
+    "@sidetree/cas-ipfs": "0.3.1-unstable.60"
+  },
   "jest": {
     "testTimeout": 6000000
   }
