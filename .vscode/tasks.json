@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-sidetree-service",
+      "type": "shell",
+      "command": "npx lerna run build --scope=@sidetree/sidetree-service --include-dependencies",
+      "problemMatcher": []
+    }
+  ]
+}

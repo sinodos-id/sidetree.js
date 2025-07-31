@@ -1,25 +1,15 @@
 {
   "packages": [
-    "packages/cas",
-    "packages/cas-ipfs",
-    "packages/cas-s3",
-    "packages/common",
-    "packages/core",
-    "packages/crypto",
-    "packages/db",
-    "packages/did-method",
-    "packages/did-method-element",
-    "packages/did-method-quarkid",
-    "packages/did-method-photon",
-    "packages/did-method-ion",
-    "packages/ledger",
-    "packages/ledger-ethereum",
-    "packages/ledger-qldb",
-    "packages/test-vectors",
-    "packages/wallet",
-    "packages/dashboard",
-    "packages/sidetree-service",
-    "packages/ledger-zksync"
+    "packages/*"
   ],
-  "version": "0.3.1-unstable.60"
+  "version": "0.3.1-unstable.60",
+  "npmClient": "npm",
+  "command": {
+    "run": {
+      "npmClient": "npm"
+    },
+    "publish": {
+      "npmClient": "npm"
+    }
+  }
 }

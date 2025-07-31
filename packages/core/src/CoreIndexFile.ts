@@ -60,7 +60,7 @@ export default class CoreIndexFile {
     } catch (e) {
       throw SidetreeError.createFromError(
         ErrorCode.CoreIndexFileDecompressionFailure,
-        e
+        e as any
       );
     }
 
@@ -70,7 +70,7 @@ export default class CoreIndexFile {
         coreIndexFileDecompressedBuffer
       );
     } catch (e) {
-      throw SidetreeError.createFromError(ErrorCode.CoreIndexFileNotJson, e);
+      throw SidetreeError.createFromError(ErrorCode.CoreIndexFileNotJson, e as any);
     }
 
     const allowedProperties = new Set([
@@ -126,12 +126,21 @@ export default class CoreIndexFile {
         throw new SidetreeError(ErrorCode.CoreIndexFileCreatePropertyNotArray);
       }
 
+      for (const operation of (operations.create as any)) {
+        const suffixData = operation.suffixData;
+        if (suffixData && Array.isArray(suffixData.recoveryCommitment) && suffixData.recoveryCommitment.length > 0) {
+          suffixData.recoveryCommitment = suffixData.recoveryCommitment[0];
+        }
+      }
+
       // Validate every create reference.
       CoreIndexFile.validateCreateReferences(operations.create);
       createDidSuffixes = (operations.create as CreateReferenceModel[]).map(
         (operation) => Did.computeUniqueSuffix(operation.suffixData)
       );
-      didUniqueSuffixes.push(...createDidSuffixes);
+      for (const suffix of createDidSuffixes) {
+        didUniqueSuffixes.push(suffix);
+      }
     }
 
     // Validate `recover` if exists.
@@ -149,7 +158,9 @@ export default class CoreIndexFile {
       recoverDidSuffixes = (operations.recover as OperationReferenceModel[]).map(
         (operation) => operation.didSuffix
       );
-      didUniqueSuffixes.push(...recoverDidSuffixes);
+      for (const suffix of recoverDidSuffixes) {
+        didUniqueSuffixes.push(suffix);
+      }
     }
 
     // Validate `deactivate` if exists.
@@ -169,7 +180,9 @@ export default class CoreIndexFile {
       deactivateDidSuffixes = (operations.deactivate as OperationReferenceModel[]).map(
         (operation) => operation.didSuffix
       );
-      didUniqueSuffixes.push(...deactivateDidSuffixes);
+      for (const suffix of deactivateDidSuffixes) {
+        didUniqueSuffixes.push(suffix);
+      }
     }
 
     if (ArrayMethods.hasDuplicates(didUniqueSuffixes)) {

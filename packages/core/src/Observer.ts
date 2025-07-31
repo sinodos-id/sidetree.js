@@ -65,7 +65,7 @@ export default class Observer {
    * Historical sync configuration with sensible defaults
    */
   private historicalSyncConfig: HistoricalSyncConfig = {
-    batchSize: 1000,
+    batchSize: 500,
     rateLimitDelayMs: 100,
     maxRetries: 3,
     retryDelayMs: 1000,
@@ -144,12 +144,23 @@ export default class Observer {
         Logger.info('No existing transactions found. Full historical sync required.');
       } else {
         // Check if we're caught up or need to resume historical sync
-        const gapSize = this.syncState.targetBlock - lastTransaction.transactionTime;
+        const lastTransactionBlockNumber = await (this.blockchain as any).getBlockNumberByHash(
+          lastTransaction.transactionTimeHash
+        );
+        const gapSize = this.syncState.targetBlock - lastTransactionBlockNumber;
+        
+        console.log({
+          'targetBlocck': this.syncState.targetBlock,
+          'lastTransactionTransactionTime': lastTransaction.transactionTime,
+          'lastTransactionBlockNumber': lastTransactionBlockNumber,
+          'gap': gapSize,
+          'batchSize': this.historicalSyncConfig.batchSize
+        })
         
         if (gapSize > this.historicalSyncConfig.batchSize) {
           // Gap is significant - resume historical sync
           this.syncState.phase = 'historical';
-          this.syncState.lastSyncedBlock = lastTransaction.transactionTime;
+          this.syncState.lastSyncedBlock = lastTransactionBlockNumber;
           this.syncState.contractDeploymentBlock = await this.detectContractDeploymentBlock();
           this.syncState.isComplete = false;
           Logger.info(`Gap of ${gapSize} blocks detected. Resuming historical sync from block ${this.syncState.lastSyncedBlock}`);
@@ -620,22 +631,11 @@ export default class Observer {
         transaction
       ); // Skip await since failure is not a critical and results in a retry.
     } else {
-      try {
-        Logger.info(
-          `Recording failed processing attempt for transaction '${transaction.transactionNumber}'...`
-        );
-        await this.unresolvableTransactionStore.recordUnresolvableTransactionFetchAttempt(
-          transaction
-        );
-      } catch (error) {
-        transactionUnderProcessing.processingStatus =
-          TransactionProcessingStatus.Error;
-
-        Logger.error(
-          `Error encountered saving unresolvable transaction '${transaction.transactionNumber}' for retry: ${error}`
-        );
-        return;
-      }
+      // Per user request, disabling retry for now.
+      // When a transaction fails, we will not add it to the unresolvable store.
+      Logger.info(
+        `Transaction '${transaction.transactionNumber}' failed processing and will not be retried.`
+      );
     }
 
     Logger.info(
