@@ -15,8 +15,8 @@
   "author": "scammi",
   "license": "Apache-2.0",
   "dependencies": {
-    "@sidetree/common": "latest",
-    "@sidetree/core": "latest",
+    "@sidetree/common": "^0.3.1-unstable.60",
+    "@sidetree/core": "^0.3.1-unstable.60",
     "@types/hdkey": "^2.1.0",
     "@types/trust__keyto": "^1.0.4",
     "dotenv": "^17.2.0",
