@@ -44,9 +44,20 @@ export default class ChunkFile {
         );
       }
     }
-
+ 
+    // NOTE: THIS IS A TEMPORARY WORKAROUND to handle an intermittent bug where `updateCommitment` is an array of a single element.
+    for (const delta of chunkFileObject.deltas) {
+      const updateCommitment = delta.updateCommitment;
+      if (
+        updateCommitment &&
+        Array.isArray(updateCommitment) &&
+        updateCommitment.length > 0
+      ) {
+        delta.updateCommitment = updateCommitment[0];
+      }
+    }
     this.validateDeltasProperty(chunkFileObject.deltas);
-
+ 
     return chunkFileObject;
   }
 
@@ -82,10 +93,16 @@ export default class ChunkFile {
     recoverOperations: RecoverOperation[],
     updateOperations: UpdateOperation[]
   ): Promise<Buffer | undefined> {
-    const deltas = [];
-    deltas.push(...createOperations.map((operation) => operation.delta!));
-    deltas.push(...recoverOperations.map((operation) => operation.delta!));
-    deltas.push(...updateOperations.map((operation) => operation.delta!));
+    let deltas: any = [];
+    deltas = deltas.concat(
+      createOperations.map((operation) => operation.delta!)
+    );
+    deltas = deltas.concat(
+      recoverOperations.map((operation) => operation.delta!)
+    );
+    deltas = deltas.concat(
+      updateOperations.map((operation) => operation.delta!)
+    );
 
     if (deltas.length === 0) {
       return undefined;
