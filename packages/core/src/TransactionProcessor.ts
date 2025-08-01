@@ -41,7 +41,6 @@ export default class TransactionProcessor implements ITransactionProcessor {
   public async processTransaction(
     transaction: TransactionModel
   ): Promise<boolean> {
-    console.log('SANTITY CHECK >>>>>> ');
     // Download the core (index and proof) files.
     let anchoredData: AnchoredData;
     let coreIndexFile: CoreIndexFile;
@@ -272,7 +271,6 @@ export default class TransactionProcessor implements ITransactionProcessor {
       coreProofFileUri,
       protocolParameters.maxProofFileSizeInBytes
     );
-    Logger.info('LOGGIN BEFORE CORE PROOF FILE >>>>>>>>>>>>>>>>>>>.');
     const coreProofFile = await CoreProofFile.parse(
       fileBuffer,
       coreIndexFile.deactivateDidSuffixes

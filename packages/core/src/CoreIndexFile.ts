@@ -49,7 +49,6 @@ export default class CoreIndexFile {
   public static async parse(
     coreIndexFileBuffer: Buffer
   ): Promise<CoreIndexFile> {
-    Logger.info('LOGGIN CORE INDEX FILE >>>>>>>>>>>>>>>>>>>.');
     let coreIndexFileDecompressedBuffer;
     try {
       const maxAllowedDecompressedSizeInBytes =
