@@ -71,7 +71,10 @@ export default class CoreIndexFile {
         coreIndexFileDecompressedBuffer
       );
     } catch (e) {
-      throw SidetreeError.createFromError(ErrorCode.CoreIndexFileNotJson, e as any);
+      throw SidetreeError.createFromError(
+        ErrorCode.CoreIndexFileNotJson,
+        e as any
+      );
     }
 
     const allowedProperties = new Set([
@@ -127,9 +130,13 @@ export default class CoreIndexFile {
         throw new SidetreeError(ErrorCode.CoreIndexFileCreatePropertyNotArray);
       }
 
-      for (const operation of (operations.create as any)) {
+      for (const operation of operations.create as any) {
         const suffixData = operation.suffixData;
-        if (suffixData && Array.isArray(suffixData.recoveryCommitment) && suffixData.recoveryCommitment.length > 0) {
+        if (
+          suffixData &&
+          Array.isArray(suffixData.recoveryCommitment) &&
+          suffixData.recoveryCommitment.length > 0
+        ) {
           suffixData.recoveryCommitment = suffixData.recoveryCommitment[0];
         }
       }

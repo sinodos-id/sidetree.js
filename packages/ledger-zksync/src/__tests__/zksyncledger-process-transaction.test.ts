@@ -14,9 +14,9 @@ import IpfsCas from '../../../cas-ipfs/src/IpfsCas';
 import ZksyncLedger from '../ZksyncLedger';
 import { web3 } from './web3';
 import { Wallet } from 'zksync-web3';
-const sidetreeTestNode = require('./sidetree-test-node-config.json');
 import { versions } from '@sidetree/core/src/versions';
 import * as dotenv from 'dotenv';
+const sidetreeTestNode = require('./sidetree-test-node-config.json');
 
 dotenv.config();
 

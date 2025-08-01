@@ -93,10 +93,13 @@ export default class Observer {
     historicalSyncConfig?: Partial<HistoricalSyncConfig>
   ) {
     this.throughputLimiter = new ThroughputLimiter(versionManager);
-    
+
     // Merge provided config with defaults
     if (historicalSyncConfig) {
-      this.historicalSyncConfig = { ...this.historicalSyncConfig, ...historicalSyncConfig };
+      this.historicalSyncConfig = {
+        ...this.historicalSyncConfig,
+        ...historicalSyncConfig,
+      };
     }
   }
 
@@ -110,9 +113,11 @@ export default class Observer {
 
       // Check if historical sync is needed before starting live processing
       await this.initializeSyncState();
-      
+
       if (this.syncState.phase === 'historical' && !this.syncState.isComplete) {
-        Logger.info('Historical sync required. Starting historical sync phase...');
+        Logger.info(
+          'Historical sync required. Starting historical sync phase...'
+        );
         await this.performHistoricalSync();
       }
 
@@ -134,41 +139,48 @@ export default class Observer {
 
       // Check if we have any transactions stored
       const lastTransaction = await this.transactionStore.getLastTransaction();
-      
+
       if (!lastTransaction) {
         // No transactions found - full historical sync needed
         this.syncState.phase = 'historical';
         this.syncState.lastSyncedBlock = 0;
         this.syncState.contractDeploymentBlock = await this.detectContractDeploymentBlock();
         this.syncState.isComplete = false;
-        Logger.info('No existing transactions found. Full historical sync required.');
+        Logger.info(
+          'No existing transactions found. Full historical sync required.'
+        );
       } else {
         // Check if we're caught up or need to resume historical sync
-        const lastTransactionBlockNumber = await (this.blockchain as any).getBlockNumberByHash(
+        const lastTransactionBlockNumber = await (this
+          .blockchain as any).getBlockNumberByHash(
           lastTransaction.transactionTimeHash
         );
         const gapSize = this.syncState.targetBlock - lastTransactionBlockNumber;
-        
+
         console.log({
-          'targetBlocck': this.syncState.targetBlock,
-          'lastTransactionTransactionTime': lastTransaction.transactionTime,
-          'lastTransactionBlockNumber': lastTransactionBlockNumber,
-          'gap': gapSize,
-          'batchSize': this.historicalSyncConfig.batchSize
-        })
-        
+          targetBlocck: this.syncState.targetBlock,
+          lastTransactionTransactionTime: lastTransaction.transactionTime,
+          lastTransactionBlockNumber: lastTransactionBlockNumber,
+          gap: gapSize,
+          batchSize: this.historicalSyncConfig.batchSize,
+        });
+
         if (gapSize > this.historicalSyncConfig.batchSize) {
           // Gap is significant - resume historical sync
           this.syncState.phase = 'historical';
           this.syncState.lastSyncedBlock = lastTransactionBlockNumber;
           this.syncState.contractDeploymentBlock = await this.detectContractDeploymentBlock();
           this.syncState.isComplete = false;
-          Logger.info(`Gap of ${gapSize} blocks detected. Resuming historical sync from block ${this.syncState.lastSyncedBlock}`);
+          Logger.info(
+            `Gap of ${gapSize} blocks detected. Resuming historical sync from block ${this.syncState.lastSyncedBlock}`
+          );
         } else {
           // Caught up - go directly to live processing
           this.syncState.phase = 'live';
           this.syncState.isComplete = true;
-          Logger.info('Node is caught up. Proceeding directly to live processing.');
+          Logger.info(
+            'Node is caught up. Proceeding directly to live processing.'
+          );
         }
       }
     } catch (error) {
@@ -194,45 +206,63 @@ export default class Observer {
    */
   private async performHistoricalSync(): Promise<void> {
     Logger.info('Starting historical sync process...');
-    
-    while (this.syncState.lastSyncedBlock < this.syncState.targetBlock && this.continuePeriodicProcessing) {
+
+    while (
+      this.syncState.lastSyncedBlock < this.syncState.targetBlock &&
+      this.continuePeriodicProcessing
+    ) {
       const batchStartBlock = this.syncState.lastSyncedBlock;
       const batchEndBlock = Math.min(
         batchStartBlock + this.historicalSyncConfig.batchSize,
         this.syncState.targetBlock
       );
 
-      Logger.info(`Processing historical batch: blocks ${batchStartBlock} to ${batchEndBlock}`);
+      Logger.info(
+        `Processing historical batch: blocks ${batchStartBlock} to ${batchEndBlock}`
+      );
 
       try {
         await this.processHistoricalBatch(batchStartBlock, batchEndBlock);
         this.syncState.lastSyncedBlock = batchEndBlock;
-        
+
         // Log progress
-        const progress = ((this.syncState.lastSyncedBlock / this.syncState.targetBlock) * 100).toFixed(2);
-        Logger.info(`Historical sync progress: ${progress}% (${this.syncState.lastSyncedBlock}/${this.syncState.targetBlock})`);
+        const progress = (
+          (this.syncState.lastSyncedBlock / this.syncState.targetBlock) *
+          100
+        ).toFixed(2);
+        Logger.info(
+          `Historical sync progress: ${progress}% (${this.syncState.lastSyncedBlock}/${this.syncState.targetBlock})`
+        );
 
         // Rate limiting to avoid overwhelming RPC/CAS
         if (this.historicalSyncConfig.rateLimitDelayMs > 0) {
           await this.sleep(this.historicalSyncConfig.rateLimitDelayMs);
         }
-
       } catch (error) {
-        Logger.error(`Failed to process historical batch ${batchStartBlock}-${batchEndBlock}: ${error}`);
-        
+        Logger.error(
+          `Failed to process historical batch ${batchStartBlock}-${batchEndBlock}: ${error}`
+        );
+
         // Implement retry logic
         let retryCount = 0;
         while (retryCount < this.historicalSyncConfig.maxRetries) {
           try {
-            Logger.info(`Retrying batch ${batchStartBlock}-${batchEndBlock}, attempt ${retryCount + 1}`);
-            await this.sleep(this.historicalSyncConfig.retryDelayMs * (retryCount + 1));
+            Logger.info(
+              `Retrying batch ${batchStartBlock}-${batchEndBlock}, attempt ${retryCount +
+                1}`
+            );
+            await this.sleep(
+              this.historicalSyncConfig.retryDelayMs * (retryCount + 1)
+            );
             await this.processHistoricalBatch(batchStartBlock, batchEndBlock);
             this.syncState.lastSyncedBlock = batchEndBlock;
             break;
           } catch (retryError) {
             retryCount++;
             if (retryCount >= this.historicalSyncConfig.maxRetries) {
-              Logger.error(`Failed to process batch ${batchStartBlock}-${batchEndBlock} after ${this.historicalSyncConfig.maxRetries} retries: ${retryError}`);
+              Logger.error(
+                `Failed to process batch ${batchStartBlock}-${batchEndBlock} after ${this.historicalSyncConfig.maxRetries} retries: ${retryError}`
+              );
               throw retryError;
             }
           }
@@ -247,20 +277,29 @@ export default class Observer {
   /**
    * Process a single historical batch
    */
-  private async processHistoricalBatch(fromBlock: number, toBlock: number): Promise<void> {
+  private async processHistoricalBatch(
+    fromBlock: number,
+    toBlock: number
+  ): Promise<void> {
     // Use the enhanced blprocessHistoricalBatchockchain interface to get transactions for the block range
-    const transactions = await (this.blockchain as any)._getTransactions(fromBlock, toBlock, {
-      omitTimestamp: false
-    });
+    const transactions = await (this.blockchain as any)._getTransactions(
+      fromBlock,
+      toBlock,
+      {
+        omitTimestamp: false,
+      }
+    );
 
     if (transactions.length === 0) {
       return; // No transactions in this range
     }
 
     // Sort transactions by transaction number to maintain ordering
-    const sortedTransactions = transactions.sort((a: TransactionModel, b: TransactionModel) => {
-      return a.transactionNumber - b.transactionNumber;
-    });
+    const sortedTransactions = transactions.sort(
+      (a: TransactionModel, b: TransactionModel) => {
+        return a.transactionNumber - b.transactionNumber;
+      }
+    );
 
     // Process each transaction sequentially to maintain order
     for (const transaction of sortedTransactions) {
@@ -274,19 +313,27 @@ export default class Observer {
         await this.processTransaction(transaction, transactionUnderProcessing);
 
         // If processing was successful, store the transaction immediately
-        if (transactionUnderProcessing.processingStatus === TransactionProcessingStatus.Processed) {
+        if (
+          transactionUnderProcessing.processingStatus ===
+          TransactionProcessingStatus.Processed
+        ) {
           await this.transactionStore.addTransaction(transaction);
         }
-
       } catch (error) {
-        Logger.error(`Failed to process historical transaction ${transaction.transactionNumber}: ${error}`);
-        
+        Logger.error(
+          `Failed to process historical transaction ${transaction.transactionNumber}: ${error}`
+        );
+
         // For historical sync, we continue processing other transactions
         // but may want to record failed transactions for later retry
         try {
-          await this.unresolvableTransactionStore.recordUnresolvableTransactionFetchAttempt(transaction);
+          await this.unresolvableTransactionStore.recordUnresolvableTransactionFetchAttempt(
+            transaction
+          );
         } catch (recordError) {
-          Logger.error(`Failed to record unresolvable transaction ${transaction.transactionNumber}: ${recordError}`);
+          Logger.error(
+            `Failed to record unresolvable transaction ${transaction.transactionNumber}: ${recordError}`
+          );
         }
       }
     }
@@ -296,7 +343,7 @@ export default class Observer {
    * Helper method for delays
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
@@ -309,7 +356,9 @@ export default class Observer {
   /**
    * Update historical sync configuration
    */
-  public updateHistoricalSyncConfig(config: Partial<HistoricalSyncConfig>): void {
+  public updateHistoricalSyncConfig(
+    config: Partial<HistoricalSyncConfig>
+  ): void {
     this.historicalSyncConfig = { ...this.historicalSyncConfig, ...config };
   }
 

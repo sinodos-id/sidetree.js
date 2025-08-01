@@ -44,7 +44,7 @@ export default class ChunkFile {
         );
       }
     }
- 
+
     // NOTE: THIS IS A TEMPORARY WORKAROUND to handle an intermittent bug where `updateCommitment` is an array of a single element.
     for (const delta of chunkFileObject.deltas) {
       const updateCommitment = delta.updateCommitment;
@@ -57,7 +57,7 @@ export default class ChunkFile {
       }
     }
     this.validateDeltasProperty(chunkFileObject.deltas);
- 
+
     return chunkFileObject;
   }
 

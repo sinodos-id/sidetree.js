@@ -1,4 +1,3 @@
-
 // =============================================================================
 // Configuration Interfaces
 // =============================================================================
@@ -6,13 +5,13 @@
 export interface HistoricalSyncConfig {
   /** Number of blocks to process in each batch (default: 1000) */
   batchSize: number;
-  
+
   /** Delay between batches in milliseconds (default: 100) */
   rateLimitDelayMs: number;
-  
+
   /** Maximum number of retries for failed batches (default: 3) */
   maxRetries: number;
-  
+
   /** Delay between retries in milliseconds (default: 1000) */
   retryDelayMs: number;
 }
@@ -20,7 +19,7 @@ export interface HistoricalSyncConfig {
 export interface PaginationConfig {
   /** Default batch size for pagination (default: 1000) */
   defaultBatchSize: number;
-  
+
   /** Maximum allowed batch size (default: 10000) */
   maxBatchSize: number;
 }
@@ -28,16 +27,16 @@ export interface PaginationConfig {
 export interface SyncState {
   /** Current sync phase */
   phase: 'historical' | 'live';
-  
+
   /** Last synchronized block number */
   lastSyncedBlock: number;
-  
+
   /** Target block number for historical sync */
   targetBlock: number;
-  
+
   /** Block where the contract was deployed */
   contractDeploymentBlock: number;
-  
+
   /** Whether historical sync is complete */
   isComplete: boolean;
 }

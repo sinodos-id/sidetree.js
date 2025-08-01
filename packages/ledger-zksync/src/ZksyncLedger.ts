@@ -48,7 +48,7 @@ export default class ZksyncLedger implements IBlockchain {
   private wallet: Wallet;
   public provider: Provider;
   public contractAddress?: string;
-  
+
   /**
    * Pagination configuration for batch processing
    */
@@ -57,7 +57,12 @@ export default class ZksyncLedger implements IBlockchain {
     maxBatchSize: 10000,
   };
 
-  constructor(wallet: Wallet, contractAddress?: string, logger?: Console, paginationConfig?: Partial<PaginationConfig>) {
+  constructor(
+    wallet: Wallet,
+    contractAddress?: string,
+    logger?: Console,
+    paginationConfig?: Partial<PaginationConfig>
+  ) {
     this.logger = logger || console;
     this.wallet = wallet;
     this.provider = this.wallet.provider as Provider;
@@ -122,21 +127,27 @@ export default class ZksyncLedger implements IBlockchain {
     options?: { filter?: EthereumFilter; omitTimestamp?: boolean }
   ): Promise<TransactionModel[]> => {
     const contract = await this.getAnchorContract();
-    
+
     // Validate block range to prevent RPC timeouts
-    const fromBlockNum = typeof fromBlock === 'string' ? 
-      (fromBlock === 'latest' ? await this.provider.getBlockNumber() : parseInt(fromBlock)) : 
-      fromBlock;
-    const toBlockNum = typeof toBlock === 'string' ? 
-      (toBlock === 'latest' ? await this.provider.getBlockNumber() : parseInt(toBlock)) : 
-      toBlock;
+    const fromBlockNum =
+      typeof fromBlock === 'string'
+        ? fromBlock === 'latest'
+          ? await this.provider.getBlockNumber()
+          : parseInt(fromBlock)
+        : fromBlock;
+    const toBlockNum =
+      typeof toBlock === 'string'
+        ? toBlock === 'latest'
+          ? await this.provider.getBlockNumber()
+          : parseInt(toBlock)
+        : toBlock;
 
     // If the range is too large, we need to batch the requests
     const blockRange = toBlockNum - fromBlockNum;
     if (blockRange > this.paginationConfig.maxBatchSize) {
       this.logger.warn(
         `Block range ${blockRange} exceeds maximum batch size ${this.paginationConfig.maxBatchSize}. ` +
-        `Consider using smaller batches for better performance.`
+          `Consider using smaller batches for better performance.`
       );
     }
 
@@ -166,7 +177,10 @@ export default class ZksyncLedger implements IBlockchain {
       }
       return utils.extendSidetreeTransactionWithTimestamp(this.provider, txns);
     } catch (error) {
-      this.logger.error(`Failed to get transactions for block range ${fromBlock}-${toBlock}:`, error);
+      this.logger.error(
+        `Failed to get transactions for block range ${fromBlock}-${toBlock}:`,
+        error
+      );
       throw error;
     }
   };
@@ -202,7 +216,10 @@ export default class ZksyncLedger implements IBlockchain {
       } else if (sinceTransactionNumber !== undefined) {
         // Only transaction number provided - need to find transactions after this number
         // For pagination support, we implement a more efficient approach
-        transactions = await this.getTransactionsAfterTransactionNumber(sinceTransactionNumber, options);
+        transactions = await this.getTransactionsAfterTransactionNumber(
+          sinceTransactionNumber,
+          options
+        );
       } else if (transactionTimeHash) {
         // Only block hash provided
         const block = await utils.getBlock(this.provider, transactionTimeHash);
@@ -220,18 +237,28 @@ export default class ZksyncLedger implements IBlockchain {
         // Instead of getting ALL transactions, we now return a limited batch
         this.logger.warn(
           'read() called without parameters - returning limited batch for performance. ' +
-          'Use historical sync for complete transaction processing.'
+            'Use historical sync for complete transaction processing.'
         );
-        
+
         const latestBlock = await this.provider.getBlockNumber();
-        const fromBlock = Math.max(0, latestBlock - this.paginationConfig.defaultBatchSize);
-        
-        transactions = await this._getTransactions(fromBlock, latestBlock, options);
+        const fromBlock = Math.max(
+          0,
+          latestBlock - this.paginationConfig.defaultBatchSize
+        );
+
+        transactions = await this._getTransactions(
+          fromBlock,
+          latestBlock,
+          options
+        );
       }
 
       // Determine if there are more transactions
       // This is a simplified implementation - in production, you might want more sophisticated logic
-      const moreTransactions = this.shouldCheckForMoreTransactions(transactions, sinceTransactionNumber);
+      const moreTransactions = this.shouldCheckForMoreTransactions(
+        transactions,
+        sinceTransactionNumber
+      );
 
       return {
         moreTransactions,
@@ -254,33 +281,39 @@ export default class ZksyncLedger implements IBlockchain {
     // 1. Use binary search to find the starting block
     // 2. Cache transaction number to block mappings
     // 3. Use event logs with transaction number filtering
-    
+
     const latestBlock = await this.provider.getBlockNumber();
     let transactions: TransactionModel[] = [];
-    
+
     // Start from recent blocks and work backwards to find transactions after the given number
     // This is more efficient than scanning from genesis for recent sync operations
     const batchSize = this.paginationConfig.defaultBatchSize;
     let currentBlock = latestBlock;
-    
+
     while (currentBlock > 0 && transactions.length === 0) {
       const fromBlock = Math.max(0, currentBlock - batchSize);
-      const batchTransactions = await this._getTransactions(fromBlock, currentBlock, options);
-      
+      const batchTransactions = await this._getTransactions(
+        fromBlock,
+        currentBlock,
+        options
+      );
+
       // Filter for transactions after the given number
       const filteredTransactions = batchTransactions.filter(
-        tx => tx.transactionNumber > sinceTransactionNumber
+        (tx) => tx.transactionNumber > sinceTransactionNumber
       );
-      
+
       if (filteredTransactions.length > 0) {
         transactions = filteredTransactions;
         break;
       }
-      
+
       currentBlock = fromBlock - 1;
     }
-    
-    return transactions.sort((a, b) => a.transactionNumber - b.transactionNumber);
+
+    return transactions.sort(
+      (a, b) => a.transactionNumber - b.transactionNumber
+    );
   }
 
   /**
@@ -314,7 +347,7 @@ export default class ZksyncLedger implements IBlockchain {
   public async getTotalTransactionCount(): Promise<number> {
     try {
       const contract = await this.getAnchorContract();
-      
+
       // Get the current transaction number from the contract
       // This assumes the contract has a public transactionNumber variable
       const currentTransactionNumber = await contract.transactionNumber();
@@ -337,25 +370,28 @@ export default class ZksyncLedger implements IBlockchain {
       // Try to find the contract creation transaction
       // This is a simplified approach - in production you might cache this value
       const latestBlock = await this.provider.getBlockNumber();
-      
+
       // Binary search for the deployment block
       let low = 0;
       let high = latestBlock;
-      
+
       while (low < high) {
         const mid = Math.floor((low + high) / 2);
         const code = await this.provider.getCode(this.contractAddress, mid);
-        
+
         if (code === '0x') {
           low = mid + 1;
         } else {
           high = mid;
         }
       }
-      
+
       return low;
     } catch (error) {
-      this.logger.warn('Could not determine contract deployment block, using 0:', error);
+      this.logger.warn(
+        'Could not determine contract deployment block, using 0:',
+        error
+      );
       return 0;
     }
   }

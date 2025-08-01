@@ -1,8 +1,5 @@
 import { IOperationStore, TransactionModel } from '@sidetree/common';
-import {
-  DownloadManager,
-  TransactionProcessor,
-} from '@sidetree/core';
+import { DownloadManager, TransactionProcessor } from '@sidetree/core';
 import { IpfsCas } from '@sidetree/cas-ipfs';
 import { Wallet } from 'zksync-web3';
 import { ZksyncLedger } from '..';
@@ -16,10 +13,13 @@ describe('TransactionProcessor Integration', () => {
   jest.setTimeout(30 * 10000);
 
   const wallet = new Wallet(process.env.PRIVATE_KEY!, web3);
-  const ledger = new ZksyncLedger(wallet, '0xe0055B74422Bec15cB1625792C4aA0beDcC61AA7');
+  const ledger = new ZksyncLedger(
+    wallet,
+    '0xe0055B74422Bec15cB1625792C4aA0beDcC61AA7'
+  );
   const cas = new IpfsCas('http://localhost:5001');
   const downloadManager = new DownloadManager(5, cas);
-  
+
   const operationStore: IOperationStore = {
     insertOrReplace: jest.fn(),
     get: jest.fn(),
@@ -29,7 +29,9 @@ describe('TransactionProcessor Integration', () => {
 
   // Mock dependencies not under test
   const blockchain = {
-    getValueTimeLock: jest.fn().mockResolvedValue({ amount: 1, unlockTransactionTime: 0 }),
+    getValueTimeLock: jest
+      .fn()
+      .mockResolvedValue({ amount: 1, unlockTransactionTime: 0 }),
     getFee: jest.fn(),
     getServiceVersion: jest.fn(),
   } as any;
@@ -63,22 +65,33 @@ describe('TransactionProcessor Integration', () => {
     // Arrange: Fetch transactions from the block range provided in the logs.
     const startBlock = 40625124;
     const endBlock = 40625624;
-    const transactions = await (ledger as any)._getTransactions(startBlock, endBlock, { omitTimestamp: false });
+    const transactions = await (ledger as any)._getTransactions(
+      startBlock,
+      endBlock,
+      { omitTimestamp: false }
+    );
     console.log(transactions);
 
     // Find the specific transaction we need to test.
-    const targetAnchorPrefix = '3.QmbcmBQkTASq3vMfAHYFU1S6HcXuEaXR8Qmn8Ak13yzmNj';
-    const targetTransaction = transactions.find((tx: TransactionModel) => tx.anchorString.startsWith(targetAnchorPrefix));
+    const targetAnchorPrefix =
+      '3.QmbcmBQkTASq3vMfAHYFU1S6HcXuEaXR8Qmn8Ak13yzmNj';
+    const targetTransaction = transactions.find((tx: TransactionModel) =>
+      tx.anchorString.startsWith(targetAnchorPrefix)
+    );
 
     // Ensure we found the transaction to test.
     expect(targetTransaction).toBeDefined();
     if (!targetTransaction) {
-      console.log(`Transaction with anchor prefix ${targetAnchorPrefix} not found in block range ${startBlock}-${endBlock}. Skipping test.`);
+      console.log(
+        `Transaction with anchor prefix ${targetAnchorPrefix} not found in block range ${startBlock}-${endBlock}. Skipping test.`
+      );
       return;
     }
 
     // Act: Process the real transaction.
-    const result = await transactionProcessor.processTransaction(targetTransaction);
+    const result = await transactionProcessor.processTransaction(
+      targetTransaction
+    );
 
     // Assert: The transaction was processed successfully and the operation was stored.
     expect(result).toBe(true);
@@ -86,7 +99,7 @@ describe('TransactionProcessor Integration', () => {
       expect.arrayContaining([
         expect.objectContaining({
           didUniqueSuffix: expect.any(String),
-          type: 'create', 
+          type: 'create',
         }),
       ])
     );
@@ -95,21 +108,32 @@ describe('TransactionProcessor Integration', () => {
     // Arrange: Fetch transactions from the block range provided in the new logs.
     const startBlock = 40471945;
     const endBlock = 40472445;
-    const transactions = await (ledger as any)._getTransactions(startBlock, endBlock, { omitTimestamp: false });
+    const transactions = await (ledger as any)._getTransactions(
+      startBlock,
+      endBlock,
+      { omitTimestamp: false }
+    );
 
     // Find the specific transaction we need to test.
-    const targetAnchorPrefix = '1.QmS69CmTSaak23FrbTHWPiZw8EtwzN4fKiAikidfDmVJ56';
-    const targetTransaction = transactions.find((tx: TransactionModel) => tx.anchorString.startsWith(targetAnchorPrefix));
+    const targetAnchorPrefix =
+      '1.QmS69CmTSaak23FrbTHWPiZw8EtwzN4fKiAikidfDmVJ56';
+    const targetTransaction = transactions.find((tx: TransactionModel) =>
+      tx.anchorString.startsWith(targetAnchorPrefix)
+    );
 
     // Ensure we found the transaction to test.
     expect(targetTransaction).toBeDefined();
     if (!targetTransaction) {
-      console.log(`Transaction with anchor prefix ${targetAnchorPrefix} not found in block range ${startBlock}-${endBlock}. Skipping test.`);
+      console.log(
+        `Transaction with anchor prefix ${targetAnchorPrefix} not found in block range ${startBlock}-${endBlock}. Skipping test.`
+      );
       return;
     }
 
     // Act: Process the real transaction.
-    const result = await transactionProcessor.processTransaction(targetTransaction);
+    const result = await transactionProcessor.processTransaction(
+      targetTransaction
+    );
 
     // Assert: The transaction processing should fail gracefully and not be retried.
     expect(result).toBe(false);
