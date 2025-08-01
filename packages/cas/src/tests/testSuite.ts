@@ -32,7 +32,6 @@ import {
   testObjectHash58,
   ionVectors,
 } from './__fixtures__';
-
 import * as util from 'util';
 import { gzip, gunzip } from 'zlib';
 

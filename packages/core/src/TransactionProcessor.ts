@@ -68,12 +68,23 @@ export default class TransactionProcessor implements ITransactionProcessor {
       // Download and verify core proof file.
       coreProofFile = await this.downloadAndVerifyCoreProofFile(coreIndexFile);
     } catch (error) {
+      if (
+        error instanceof SidetreeError &&
+        error.code === ErrorCode.CasFileNotFound
+      ) {
+        Logger.info(
+          `CAS file not found for anchor string '${transaction.anchorString}', skipping transaction to unblock processing.`
+        );
+        // Returning true to signal that the transaction should not be retried.
+        return true;
+      }
+
       let retryNeeded = true;
       if (error instanceof SidetreeError) {
         // If error is related to CAS network connectivity issues, we need to retry later.
         if (
           error.code === ErrorCode.CasNotReachable ||
-          error.code === ErrorCode.CasFileNotFound
+          error.code === ErrorCode.BatchSchedulerWriteUnexpectedError
         ) {
           retryNeeded = true;
         } else {
@@ -83,7 +94,7 @@ export default class TransactionProcessor implements ITransactionProcessor {
               `Invalid core file found for anchor string '${LogColor.green(
                 transaction.anchorString
               )}', the entire batch is discarded. Error: ${LogColor.yellow(
-                error.message
+                (error as any).message
               )}`
             )
           );
@@ -92,7 +103,7 @@ export default class TransactionProcessor implements ITransactionProcessor {
       } else {
         Logger.error(
           LogColor.red(
-            `Unexpected error while fetching and downloading core files, MUST investigate and fix: ${error.message}`
+            `Unexpected error while fetching and downloading core files, MUST investigate and fix: ${error}`
           )
         );
         retryNeeded = true;
@@ -143,7 +154,8 @@ export default class TransactionProcessor implements ITransactionProcessor {
         // If error is related to CAS network connectivity issues, we need to retry later.
         if (
           error.code === ErrorCode.CasNotReachable ||
-          error.code === ErrorCode.CasFileNotFound
+          error.code === ErrorCode.CasFileNotFound ||
+          error.code === ErrorCode.CasFileNotAFile
         ) {
           retryNeeded = true;
         } else {
@@ -153,7 +165,7 @@ export default class TransactionProcessor implements ITransactionProcessor {
               `Invalid provisional/chunk file found for anchor string '${LogColor.green(
                 transaction.anchorString
               )}', the entire batch is discarded. Error: ${LogColor.yellow(
-                error.message
+                (error as any).message
               )}`
             )
           );
@@ -162,7 +174,7 @@ export default class TransactionProcessor implements ITransactionProcessor {
       } else {
         Logger.error(
           LogColor.red(
-            `Unexpected error while fetching and downloading provisional files, MUST investigate and fix: ${error.message}`
+            `Unexpected error while fetching and downloading provisional files, MUST investigate and fix: ${error}`
           )
         );
         retryNeeded = true;
@@ -444,11 +456,19 @@ export default class TransactionProcessor implements ITransactionProcessor {
       chunkFile
     );
 
-    const anchoredOperationModels = [];
-    anchoredOperationModels.push(...anchoredCreateOperationModels);
-    anchoredOperationModels.push(...anchoredRecoverOperationModels);
-    anchoredOperationModels.push(...anchoredDeactivateOperationModels);
-    anchoredOperationModels.push(...anchoredUpdateOperationModels);
+    const anchoredOperationModels: AnchoredOperationModel[] = [];
+    anchoredCreateOperationModels.forEach((op) => {
+      anchoredOperationModels.push(op);
+    });
+    anchoredRecoverOperationModels.forEach((op) => {
+      anchoredOperationModels.push(op);
+    });
+    anchoredDeactivateOperationModels.forEach((op) => {
+      anchoredOperationModels.push(op);
+    });
+    anchoredUpdateOperationModels.forEach((op) => {
+      anchoredOperationModels.push(op);
+    });
     return anchoredOperationModels;
   }
 

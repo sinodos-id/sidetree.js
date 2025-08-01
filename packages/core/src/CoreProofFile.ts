@@ -89,7 +89,7 @@ export default class CoreProofFile {
     } catch (error) {
       throw SidetreeError.createFromError(
         ErrorCode.CoreProofFileDecompressionFailure,
-        error
+        error as any
       );
     }
 
@@ -101,7 +101,7 @@ export default class CoreProofFile {
     } catch (error) {
       throw SidetreeError.createFromError(
         ErrorCode.CoreProofFileNotJson,
-        error
+        error as any
       );
     }
 

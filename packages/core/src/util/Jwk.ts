@@ -115,11 +115,25 @@ export default class Jwk {
     index: number
   ): Promise<[PublicKeyJwkSecp256k1, PrivateKeyJwkSecp256k1]> {
     const privateKeyBuffer = await Jwk.getBufferAtIndex(mnemonic, index);
-    const publicKeyJwk = keytoFrom(privateKeyBuffer, 'blk').toJwk('public');
+    const privateKeyHex = privateKeyBuffer.toString('hex');
+    const publicKeyJwk = keytoFrom(privateKeyHex, 'blk').toJwk('public');
     publicKeyJwk.crv = 'secp256k1';
-    const privateKeyJwk = keytoFrom(privateKeyBuffer, 'blk').toJwk('private');
+    const privateKeyJwk = keytoFrom(privateKeyHex, 'blk').toJwk('private');
     privateKeyJwk.crv = 'secp256k1';
-    return [publicKeyJwk, privateKeyJwk];
+    const kid = await Jwk.getKid(publicKeyJwk as any);
+    (publicKeyJwk as any).kid = kid;
+    (privateKeyJwk as any).kid = kid;
+    return [
+      publicKeyJwk as PublicKeyJwkSecp256k1,
+      privateKeyJwk as PrivateKeyJwkSecp256k1,
+    ];
+  }
+
+  private static async getKid(jwk: any): Promise<string> {
+    const copy = { ...jwk };
+    delete copy.kid;
+    const thumbprint = await jose.calculateJwkThumbprint(copy);
+    return thumbprint;
   }
 
   /**

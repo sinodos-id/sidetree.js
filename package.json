@@ -23,7 +23,9 @@
     "publish:stable:patch": "lerna publish patch --force-publish",
     "publish:stable:minor": "lerna publish minor",
     "publish:stable:major": "lerna publish major",
-    "publish:unstable": "lerna publish prerelease --preid unstable --yes"
+    "publish:unstable": "lerna publish prerelease --preid unstable --yes",
+    "build:sidetree-service": "lerna run build --scope=@sidetree/element --scope=@sidetree/photon --scope=@sidetree/quarkid --scope=@sidetree/did-method && cd packages/sidetree-service && npm start",
+    "dev:sidetree": "lerna run build && cd packages/sidetree-service && npm run dev"
   },
   "husky": {
     "hooks": {

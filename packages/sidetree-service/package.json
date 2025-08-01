@@ -1,0 +1,17 @@
+{
+  "name": "@sidetree/sidetree-service",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build:sidetree-service": "lerna run build --scope=@sidetree/element --scope=@sidetree/photon --scope=@sidetree/quarkid --scope=@sidetree/did-method && cd packages/sidetree-service && npm start",
+    "dev:sidetree": "lerna run build --scope=@sidetree/sidetre-service --include-dependencies"
+  },
+  "dependencies": {
+    "@sidetree/did-method": "^0.3.1-unstable.60",
+    "@sidetree/element": "^0.3.1-unstable.60",
+    "@sidetree/photon": "^0.3.1-unstable.60",
+    "@sidetree/quarkid": "^0.3.1-unstable.60"
+  }
+}

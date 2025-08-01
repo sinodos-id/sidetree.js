@@ -1,12 +1,23 @@
-// Replace `nextjs-github-pages` with your Github repo project name.
-const isProd = process.env.NODE_ENV === 'production';
+const withTM = require('next-transpile-modules')([
+  '@sidetree/cas',
+  '@sidetree/cas-ipfs',
+  '@sidetree/common',
+  '@sidetree/core',
+  '@sidetree/crypto',
+  '@sidetree/db',
+  '@sidetree/did-method',
+  '@sidetree/element',
+  '@sidetree/ethereum',
+  '@sidetree/photon',
+  '@sidetree/wallet',
+  '@sidetree/quarkid',
+]);
 
-module.exports = {
+module.exports = withTM({
   productionBrowserSourceMaps: true,
   reactStrictMode: true,
-  webpack5: false,
   // Use the prefix in production and not development.
-  assetPrefix: isProd ? '' : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? '' : '',
   // https://nextjs.org/docs/messages/import-esm-externals
   experimental: { esmExternals: 'loose', outputFileTracing: true },
   // see https://github.com/vercel/vercel/issues/2569#issuecomment-514865342
@@ -17,16 +28,16 @@ module.exports = {
       config.resolve.alias['node-fetch'] = 'node-fetch/lib/index.js';
       const [nextJsExternals] = config.externals;
       config.externals = [
-        (context, request, callback) => {
+        ({ context, request }, callback) => {
           // Ignore electron, it is referenced in cas-ipfs/node_modules/electron-fetch
           const IGNORES = ['electron'];
           if (IGNORES.indexOf(request) >= 0) {
             return callback(null, "require('" + request + "')");
           }
-          nextJsExternals(context, request, callback);
+          nextJsExternals({ context, request }, callback);
         },
       ];
     }
     return config;
   },
-};
+});

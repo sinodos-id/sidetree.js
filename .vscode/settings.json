@@ -5,5 +5,8 @@
     {
       "pattern": "packages/*"
     }
-  ]
+  ],
+  "cSpell.words": [
+    "Quarkid"
+  ],
 }

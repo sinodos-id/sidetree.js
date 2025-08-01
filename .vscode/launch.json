@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Sidetree Service",
+      "runtimeExecutable": "/Users/skamy/.local/share/nvm/v14.21.3/bin/node",
+      "runtimeArgs": ["server.js"],
+      "cwd": "${workspaceFolder}/packages/sidetree-service",
+      "preLaunchTask": "build-sidetree-service",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ]
+}

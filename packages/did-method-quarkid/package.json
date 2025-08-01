@@ -1,0 +1,65 @@
+{
+  "name": "@sidetree/quarkid",
+  "publishConfig": {
+    "access": "public"
+  },
+  "author": "Orie Steele (https://github.com/OR13)",
+  "contributors": [
+    "Orie Steele (https://github.com/OR13)",
+    "gjgd (https://github.com/gjgd)",
+    "scammi (https://github.com/scammi)"
+  ],
+  "module": "dist/element.esm.js",
+  "version": "0.3.1-unstable.60",
+  "license": "Apache-2.0",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "pretest": "docker-compose up -d mongo ganache ipfs",
+    "test": "tsdx test --runInBand",
+    "lint": "tsdx lint src",
+    "lint:fix": "tsdx lint src --fix",
+    "prepare": "tsdx build"
+  },
+  "devDependencies": {
+    "@sidetree/test-vectors": "^0.3.1-unstable.60",
+    "@sidetree/wallet": "^0.3.1-unstable.60",
+    "tsdx": "^0.14.1"
+  },
+  "dependencies": {
+    "@rollup/plugin-replace": "^3.0.0",
+    "@sidetree/cas": "^0.3.1-unstable.60",
+    "@sidetree/cas-ipfs": "^0.3.1-unstable.60",
+    "@sidetree/common": "^0.3.1-unstable.60",
+    "@sidetree/core": "^0.3.1-unstable.60",
+    "@sidetree/db": "^0.3.1-unstable.60",
+    "@sidetree/did-method": "^0.3.1-unstable.60",
+    "@sidetree/ethereum": "^0.3.1-unstable.60",
+    "@sidetree/ledger-zksync": "1.0.0",
+    "@transmute/universal-wallet": "^0.7.0-unstable.51",
+    "@truffle/hdwallet-provider": "^2.0.0",
+    "dotenv": "^16.0.1",
+    "ethers": "^5.8.0",
+    "factory.ts": "^1.2.0",
+    "jest-environment-node": "^27.2.5",
+    "mongodb": "^4.1.2",
+    "web3": "^1.2.9",
+    "zksync-web3": "^0.17.1"
+  },
+  "gitHead": "e97862f01a5ad9845d82eb57ca46d335a98aeb8b",
+  "homepage": "www.quarkid.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/transmute-industries/sidetree.js.git",
+    "directory": "packages/did-method-quarkid"
+  }
+}

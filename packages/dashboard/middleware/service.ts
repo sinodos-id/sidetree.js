@@ -13,9 +13,12 @@ class SidetreeServiceManager {
   }
 
   public async init() {
+    console.log('🚀 [service] Initializing Sidetree service...');
+    console.log('🚀 [service] Using DID Method:', nodeConfiguration.didMethodName);
     const method = await methodSwitch(nodeConfiguration.didMethodName)(
       nodeConfiguration
     );
+    console.log('🚀 [service] Sidetree service initialized successfully.');
     return method;
   }
 

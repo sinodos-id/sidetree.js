@@ -1,0 +1,33 @@
+{
+  "name": "@sidetree/ledger-zksync",
+  "version": "1.0.0",
+  "description": "iblockachain implementation for zksync ledger",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "test": "tsdx test",
+    "start": "tsdx watch",
+    "build": "tsdx build",
+    "lint": "tsdx lint src",
+    "lint:fix": "tsdx lint src --fix",
+    "prepare": "tsdx build"
+  },
+  "author": "scammi",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@sidetree/common": "^0.3.1-unstable.60",
+    "@sidetree/core": "^0.3.1-unstable.60",
+    "@types/hdkey": "^2.1.0",
+    "@types/trust__keyto": "^1.0.4",
+    "dotenv": "^17.2.0",
+    "ethers": "^5.8.0",
+    "tsdx": "^0.14.1",
+    "zksync-web3": "^0.17.1"
+  },
+  "devDependencies": {
+    "@sidetree/cas-ipfs": "0.3.1-unstable.60"
+  },
+  "jest": {
+    "testTimeout": 6000000
+  }
+}

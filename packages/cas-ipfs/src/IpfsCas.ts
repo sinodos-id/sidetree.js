@@ -24,7 +24,6 @@ import {
   ServiceVersionModel,
 } from '@sidetree/common';
 import ipfsClient from 'ipfs-http-client';
-import concat from 'it-concat';
 
 const { version } = require('../package.json');
 
@@ -32,18 +31,17 @@ export default class CasIpfs implements ICasService {
   private ipfs: any;
 
   constructor(multiaddr: string) {
-    const parts = multiaddr.split('/');
-
-    if (parts[1] === 'ip4') {
-      this.ipfs = ipfsClient({ host: parts[2], port: parts[4] });
-    }
-
-    if (parts[1] === 'dns4') {
+    if (multiaddr.startsWith('http')) {
+      const url = new URL(multiaddr);
       this.ipfs = ipfsClient({
-        host: parts[2],
-        port: parts[4],
-        protocol: parts[5],
+        host: url.hostname,
+        port: Number(url.port),
+        protocol: url.protocol.slice(0, -1),
       });
+    } else {
+      // It's a multi-address, let the client parse it.
+      // Cast to `any` to bypass incorrect type definitions if necessary.
+      this.ipfs = ipfsClient(multiaddr as any);
     }
   }
   public async initialize(): Promise<void> {
@@ -68,22 +66,29 @@ export default class CasIpfs implements ICasService {
 
   public async read(address: string): Promise<FetchResult> {
     try {
-      const source = this.ipfs.get(address);
-      const file = await source.next();
-      const bufferList: any = await concat(file.value.content);
-      const content = bufferList.copy();
-      if (content) {
-        return {
-          code: FetchResultCode.Success,
-          content,
-        };
+      for await (const file of this.ipfs.get(address, { timeout: 10000 })) {
+        if (file.content) {
+          const chunks = [];
+          for await (const chunk of file.content) {
+            chunks.push(chunk);
+          }
+          const content = Buffer.concat(chunks);
+          return {
+            code: FetchResultCode.Success,
+            content: content,
+          };
+        }
       }
+      // If loop completes without returning, it means no file was found.
       return {
         code: FetchResultCode.NotFound,
       };
     } catch (e) {
-      const err = e as { name: string };
-      if (err.name === 'TimeoutError') {
+      const err = e as { name: string; message?: string };
+      if (
+        err.name === 'TimeoutError' ||
+        (err.message && err.message.includes('not found'))
+      ) {
         return {
           code: FetchResultCode.NotFound,
         };

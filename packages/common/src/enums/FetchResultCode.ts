@@ -28,6 +28,7 @@ enum FetchResultCode {
   NotAFile = 'content_not_a_file',
   NotFound = 'content_not_found',
   Success = 'success',
+  UnexpectedError = 'unexpected_error',
 }
 
 export default FetchResultCode;
