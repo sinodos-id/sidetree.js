@@ -37,6 +37,7 @@ The following did methods are supported or intended to be supported (or planned 
 | did:photon    | [spec](packages/did-method-photon/README.md)                                                            | Amazon QLDB        | Amazon S3 | Full    |
 | did:ion       | [spec](https://github.com/decentralized-identity/ion)                                                   | Bitcoin            | IPFS      | [Planned](https://github.com/transmute-industries/sidetree.js/issues/379) |
 | did:orb | [spec](https://trustbloc.github.io/did-method-orb/) | Hyperledger Fabric | IPFS      | [Planned](https://github.com/transmute-industries/sidetree.js/issues/380) |
+| did:quarkid | [spec](packages/did-method-quarkid/README.md) | zkSync             | IPFS      | In Progress |
 
 ### Public Sidetree.js Nodes
 
